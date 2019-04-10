@@ -7,10 +7,7 @@ title:  Team
 
 
 ## USER 1
-***UCI Net ID***: ucinetid1
+Eisah Jones: jonesea
 
 ## USER 2
-***UCI Net ID***: ucinetid2
-
-## USER 3
-***UCI Net ID***: ucinetid3
+Chris Barclay: crbarcla
