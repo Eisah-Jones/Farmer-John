@@ -7,4 +7,4 @@ Source code: https://github.com/Eisah-Jones/Farmer-John
 
 Reports:
 
-- [Proposal](proposal.html)
+- [Proposal](proposal.md)
