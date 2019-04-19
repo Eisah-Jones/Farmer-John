@@ -1,8 +1,3 @@
----
-layout: default
-title: Proposal
----
-
 ## Proposal Meeting Time: April 24th @ 3:30
 
 ## Summary
@@ -25,9 +20,11 @@ If time permits, we would like to have an agent that can also:
 
 ## AI/ML Algorithms
 
-  - Reinforcement Learning for navigation/crafting
-  - Markov Chains for decision making
+  - Pathfinding Algorithms (i.e. Dijkstra, A*, Any-angle Path Planning)
+  - Reinforcement Learning
+  - Markov Chains
   - Neural Networks
+  - Genetic Algoritms
 
 ## Evaluation Plan
-We will evaluate the performance of our agent based on their productivity. For example, if the agent just manages a small wheat farm, the entire amount of wheat harvested and seeds planted could be used to determine how well our agent performed. If the agent is wasting time wandering around the farm, it will have a low performance score, but if the agent is tending carefully to the farm, it will have a much higher performance score. The worst any model can do is produce nothing during the observation period and have a performance score of zero. The maximum performance score will have to be discovered upon implementing and testing some of the AI/ML algorithms suggested above.
+Because our agent is working on a fairly complex optimization problem, we will evaluate the performance of our agent based on their productivity. For example, if the agent just manages a small wheat farm, the entire amount of wheat harvested and seeds planted during a predefined time period could be used to determine how well our agent performed. If the agent is wasting time wandering around the farm, it will have a low performance score, but if the agent is tending carefully to the farm, it will have a much higher performance score. The worst any model can do is produce nothing during the observation period and have a performance score of zero. The maximum performance score will have to be discovered upon implementing and testing some of the AI/ML algorithms suggested above. Path finding evaluation hueristics will be evaluated based on the efficiency of the route, however this may just be handled by hardcoded path finding algorithms.
