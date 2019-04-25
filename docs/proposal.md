@@ -7,6 +7,7 @@ For our minimum viable product we would like to have an agent that can:
   - Retrieve necessary resources
   - Till grass blocks
   - Plant seeds
+  - Plant failure based on time of day, weather, block type and condition.
   - Harvest crops
   - Store/organize farm resources
   
