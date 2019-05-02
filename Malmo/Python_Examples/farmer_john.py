@@ -6,6 +6,12 @@ import time
 import random
 import farm_generator as fg
 import tensorflow as tf
+import numpy as np
+
+
+block_value = {"white_shulker_box": 0,
+               "brown_shulker_box": 1,
+                "blue_shulker_box": 2}
 
 
 def spawn_farm(f, n, m):
@@ -35,7 +41,6 @@ def get_agent_pos(f, n):
             if (f[0][i][j] == "white_shulker_box" and (random.random() < 0.02 or pos == None)):
                 pos = (x, z)
     return pos
-
 
 
 def run_mission():
@@ -134,7 +139,7 @@ def run_mission():
     print("\nMission running ", end=' ')
 
     ## For testing pathfinding
-    dest  = random.choice(farmland)
+    dest  = list(random.choice(farmland))
 
     ## Loop until mission ends:
     while world_state.is_mission_running:
@@ -146,16 +151,27 @@ def run_mission():
 
         if(len(world_state.observations) > 0):
             obs = world_state.observations[-1].text
-            
+
+            # Get agent's current position
             x_idx = obs[obs.index("\"XPos\":"):].index(':') + obs.index("\"XPos\":") + 1
             x_end = obs[x_idx:].index(',') + x_idx
-            x = obs[x_idx : x_end]
+            x = int(float(obs[x_idx : x_end]))
 
             z_idx = obs[obs.index("\"ZPos\":"):].index(':') + obs.index("\"ZPos\":") + 1
             z_end = obs[z_idx:].index(',') + z_idx
-            z = obs[z_idx : z_end]
-            
-            start = (x, z)
+            z = int(float(obs[z_idx : z_end]))
+
+            start = [x, z]
+
+            # Get adjacent blocks to agent
+            adj = []
+            for i in range(-1, 2):
+                for j in range(-1, 2):
+                    if(not (i == j or i+j == 0)):
+                        adj.append(block_value[farm[0][x+i][z+j]])
+
+            ## Input vector for pathfinding NN
+            pathfindingInput = np.array([x, z] + dest + adj)
 
     print("\nMission ended")
     ## Mission has ended.
