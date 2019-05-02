@@ -90,7 +90,6 @@ def run_mission():
     my_mission_record = MalmoPython.MissionRecordSpec()
 
     ## Create Farm
-    #my_mission.startAt(0, 5, 0)
     size = 32;
     size += size%2 # Make sure the size is even
     # 3D-array of the farm
@@ -134,6 +133,7 @@ def run_mission():
 
     print("\nMission running ", end=' ')
 
+    ## For testing pathfinding
     dest  = random.choice(farmland)
 
     ## Loop until mission ends:
@@ -161,8 +161,5 @@ def run_mission():
     ## Mission has ended.
         
         
-
-
-
 if __name__ == "__main__":
     run_mission()

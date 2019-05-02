@@ -32,17 +32,6 @@ shulker_dict = {"farmland": "brown_shulker_box",
                 "stone": "white_shulker_box"}
 
 
-def get_plot1(available):
-    spawn1 = []
-    for a in available:
-        if(a in availableAll):
-            spawn1.append(a)
-            availableAll.remove(a)
-            for i in range(-1, len(plot1)+1):
-                for j in range(-1, len(plot1[0])+1):
-                    if ((a[0]+i, a[1]+j) in availableAll):
-                        availableAll.remove((a[0]+i, a[1]+j))
-
 
 def spawn_plots(f, n):
 
@@ -83,18 +72,7 @@ def spawn_plots(f, n):
             for i in range(len(plot)):
                 for j in range(len(plot[0])):
                     f[0][s[0]+i][s[1]+j] = shulker_dict[plot[i][j]]
-                    f[1][s[0]+i][s[1]+j] = plot[i][j]
-                    
-            
-    return f
-
-
-def testing_corners(f, n):
-    f[0][0][0] = "blue_shulker_box"
-    f[0][0][n-1] = "red_shulker_box"
-    f[0][n-1][0] = "black_shulker_box"
-    f[0][n-1][n-1] = "orange_shulker_box"
-    print("testing")
+                    f[1][s[0]+i][s[1]+j] = plot[i][j]  
     return f
 
 
@@ -117,6 +95,5 @@ def generate_farm(size):
     ''' Generate a list representation of the farm
     '''
     farm = initialize_farm(size)
-    #farm = testing_corners(farm, size)
     farm = spawn_plots(farm, size)
     return farm
