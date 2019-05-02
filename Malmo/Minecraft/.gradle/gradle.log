@@ -2661,3 +2661,82 @@ Current status: 1186/1196   99%
 [18:22:18] [Client thread/INFO]: [STDOUT]: CLIENT request state: WAITING_FOR_SERVER_MISSION_END
 [18:22:18] [Client thread/INFO]: [STDOUT]: CLIENT enter state: WAITING_FOR_SERVER_MISSION_END
 [18:22:18] [Server thread/INFO]: [STDOUT]: SERVER request state: CLEAN_UP
+[18:22:18] [Server thread/INFO]: [STDOUT]: SERVER enter state: CLEAN_UP
+[18:22:18] [Server thread/INFO]: [STDOUT]: SERVER request state: DORMANT
+[18:22:18] [Client thread/INFO]: [STDOUT]: CLIENT request state: DORMANT
+[18:22:18] [Client thread/INFO]: [STDOUT]: CLIENT enter state: DORMANT
+[18:22:18] [Client thread/INFO]: [STDOUT]: JETTISONING 0 COMMANDS
+[18:22:19] [Server thread/INFO]: [STDOUT]: SERVER enter state: DORMANT
+[18:40:12] [Thread-318/INFO]: [STDOUT]: Received from localhost:MALMO_REQUEST_CLIENT:0.37.0:20000:
+[18:40:12] [Thread-318/INFO]: [STDOUT]: ==== RES:  - -1055294
+[18:40:12] [Thread-318/INFO]: [STDOUT]: REPLYING WITH: MALMOOK
+[18:40:12] [Thread-320/INFO]: [STDOUT]: Received from localhost:<?xml version="1.0" encoding="utf-8"?><MissionInit xmlns="http://ProjectMalmo.microsoft.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" SchemaVersion="" PlatformVersion="0.37.0"><Mission>                                                                                              <About>                              <Summary>Setup Farm</Summary></About><ServerSection>                              <ServerHandlers>                                                                                        <FlatWorldGenerator generatorString="2;10x0;1;"/><DrawingDecorator>                  <DrawBlock type="white_shulker_box" x="-16" y="0" z="-16"/><DrawBlock type="grass" x="-16" y="1" z="-16"/><DrawBlock type="white_shulker_box" x="-16" y="0" z="-15"/><DrawBlock type="grass" x="-16" y="1" z="-15"/><DrawBlock type="white_shulker_box" x="-16" y="0" z="-14"/><DrawBlock type="grass" x="-16" y="1" z="-14"/><DrawBlock type="white_shulker_box" x="-16" y="0" z="-13"/><DrawBlock type="grass" x="-16" y="1" z="-13"/>
+[18:40:12] [Thread-320/INFO]: [STDOUT]: REPLYING WITH: MALMOOK
+[18:40:12] [Client thread/INFO]: [STDOUT]: Mission received: Setup Farm
+[18:40:12] [Client thread/INFO]: [STDOUT]: CLIENT request state: CREATING_HANDLERS
+[18:40:12] [Client thread/INFO]: [STDOUT]: CLIENT enter state: CREATING_HANDLERS
+[18:40:12] [Client thread/INFO]: [STDOUT]: CLIENT request state: EVALUATING_WORLD_REQUIREMENTS
+[18:40:12] [Client thread/INFO]: [STDOUT]: CLIENT enter state: EVALUATING_WORLD_REQUIREMENTS
+[18:40:12] [Client thread/INFO]: [STDOUT]: CLIENT request state: WAITING_FOR_SERVER_READY
+[18:40:12] [Client thread/INFO]: [STDOUT]: CLIENT enter state: WAITING_FOR_SERVER_READY
+[18:40:12] [Client thread/INFO]: [STDOUT]: ***Telling server we are ready - FarmerBot
+[18:40:12] [Server thread/INFO]: [STDOUT]: INCOMING MISSION: Received MissionInit directly through queue.
+[18:40:12] [Server thread/INFO]: [STDOUT]: Mission received: Setup Farm
+[18:40:12] [Server thread/INFO]: Received mission: §9Setup Farm
+[18:40:12] [Server thread/INFO]: Source: §alocalhost
+[18:40:12] [Server thread/INFO]: [STDOUT]: SERVER request state: BUILDING_WORLD
+[18:40:12] [Server thread/INFO]: [STDOUT]: SERVER enter state: BUILDING_WORLD
+[18:40:12] [Client thread/INFO]: [CHAT] Received mission: §9Setup Farm
+[18:40:12] [Client thread/INFO]: [CHAT] Source: §alocalhost
+[18:40:12] [Server thread/INFO]: [STDOUT]: SERVER request state: WAITING_FOR_AGENTS_TO_ASSEMBLE
+[18:40:12] [Server thread/INFO]: [STDOUT]: SERVER enter state: WAITING_FOR_AGENTS_TO_ASSEMBLE
+[18:40:12] [Server thread/INFO]: [STDOUT]: Experiment requires: 
+[18:40:12] [Server thread/INFO]: [STDOUT]: >>>> FarmerBot
+[18:40:12] [Client thread/INFO]: [STDOUT]: ***Telling server we are ready - FarmerBot
+[18:40:12] [Client thread/INFO]: [STDOUT]: CLIENT request state: RUNNING
+[18:40:12] [Client thread/INFO]: [STDOUT]: CLIENT enter state: RUNNING
+[18:40:13] [Server thread/INFO]: [STDOUT]: SERVER request state: RUNNING
+[18:40:13] [Server thread/INFO]: [STDOUT]: SERVER enter state: RUNNING
+[18:40:13] [Client thread/INFO]: [CHAT] §c§l1...
+[18:40:14] [Server thread/INFO]: [STDOUT]: SERVER request state: WAITING_FOR_AGENTS_TO_QUIT
+[18:40:14] [Server thread/INFO]: [STDOUT]: SERVER enter state: WAITING_FOR_AGENTS_TO_QUIT
+[18:40:14] [Client thread/INFO]: [CHAT] §c§l0...
+[18:40:14] [Client thread/INFO]: [STDOUT]: CLIENT request state: MISSION_ENDED
+[18:40:14] [Client thread/INFO]: [STDOUT]: CLIENT enter state: MISSION_ENDED
+[18:40:14] [Client thread/INFO]: [STDOUT]: Sending mission ended message to localhost:10710.
+[18:40:14] [Client thread/INFO]: [STDOUT]: CLIENT request state: WAITING_FOR_SERVER_MISSION_END
+[18:40:14] [Client thread/INFO]: [STDOUT]: CLIENT enter state: WAITING_FOR_SERVER_MISSION_END
+[18:40:14] [Server thread/INFO]: [STDOUT]: SERVER request state: CLEAN_UP
+[18:40:14] [Server thread/INFO]: [STDOUT]: SERVER enter state: CLEAN_UP
+[18:40:14] [Server thread/INFO]: [STDOUT]: SERVER request state: DORMANT
+[18:40:14] [Client thread/INFO]: [STDOUT]: CLIENT request state: DORMANT
+[18:40:14] [Client thread/INFO]: [STDOUT]: CLIENT enter state: DORMANT
+[18:40:14] [Client thread/INFO]: [STDOUT]: JETTISONING 0 COMMANDS
+[18:40:14] [Server thread/INFO]: [STDOUT]: SERVER enter state: DORMANT
+[18:41:07] [Server thread/INFO]: Saving and pausing game...
+[18:41:07] [Server thread/INFO]: Saving chunks for level 'TEMP_10000_2225dfee-25c5-41c1-abfe-57375ce41a8a'/Overworld
+[18:41:07] [Server thread/INFO]: Saving chunks for level 'TEMP_10000_2225dfee-25c5-41c1-abfe-57375ce41a8a'/Nether
+[18:41:07] [Server thread/INFO]: Saving chunks for level 'TEMP_10000_2225dfee-25c5-41c1-abfe-57375ce41a8a'/The End
+[18:41:29] [Thread-324/INFO]: [STDOUT]: Received from localhost:MALMO_REQUEST_CLIENT:0.37.0:20000:
+[18:41:29] [Thread-324/INFO]: [STDOUT]: ==== RES:  - -56988
+[18:41:29] [Thread-324/INFO]: [STDOUT]: REPLYING WITH: MALMOOK
+[18:41:29] [Thread-326/INFO]: [STDOUT]: Received from localhost:<?xml version="1.0" encoding="utf-8"?><MissionInit xmlns="http://ProjectMalmo.microsoft.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" SchemaVersion="" PlatformVersion="0.37.0"><Mission>                                                                                              <About>                              <Summary>Setup Farm</Summary></About><ServerSection>                              <ServerHandlers>                                                                                        <FlatWorldGenerator generatorString="2;10x0;1;"/><DrawingDecorator>                  <DrawBlock type="white_shulker_box" x="-16" y="0" z="-16"/><DrawBlock type="grass" x="-16" y="1" z="-16"/><DrawBlock type="white_shulker_box" x="-16" y="0" z="-15"/><DrawBlock type="grass" x="-16" y="1" z="-15"/><DrawBlock type="white_shulker_box" x="-16" y="0" z="-14"/><DrawBlock type="grass" x="-16" y="1" z="-14"/><DrawBlock type="white_shulker_box" x="-16" y="0" z="-13"/><DrawBlock type="grass" x="-16" y="1" z="-13"/>
+[18:41:29] [Thread-326/INFO]: [STDOUT]: REPLYING WITH: MALMOOK
+[18:41:29] [Client thread/INFO]: [STDOUT]: Mission received: Setup Farm
+[18:41:29] [Client thread/INFO]: [STDOUT]: CLIENT request state: CREATING_HANDLERS
+[18:41:29] [Client thread/INFO]: [STDOUT]: CLIENT enter state: CREATING_HANDLERS
+[18:41:29] [Client thread/INFO]: [STDOUT]: CLIENT request state: EVALUATING_WORLD_REQUIREMENTS
+[18:41:29] [Client thread/INFO]: [STDOUT]: CLIENT enter state: EVALUATING_WORLD_REQUIREMENTS
+[18:41:29] [Client thread/INFO]: [STDOUT]: CLIENT request state: WAITING_FOR_SERVER_READY
+[18:41:29] [Client thread/INFO]: [STDOUT]: CLIENT enter state: WAITING_FOR_SERVER_READY
+[18:41:29] [Client thread/INFO]: [STDOUT]: ***Telling server we are ready - FarmerBot
+[18:41:29] [Server thread/INFO]: [STDOUT]: INCOMING MISSION: Received MissionInit directly through queue.
+[18:41:29] [Server thread/INFO]: [STDOUT]: Mission received: Setup Farm
+[18:41:29] [Server thread/INFO]: Received mission: §9Setup Farm
+[18:41:29] [Server thread/INFO]: Source: §alocalhost
+[18:41:29] [Server thread/INFO]: [STDOUT]: SERVER request state: BUILDING_WORLD
+[18:41:29] [Server thread/INFO]: [STDOUT]: SERVER enter state: BUILDING_WORLD
+[18:41:29] [Server thread/INFO]: [STDOUT]: SERVER request state: WAITING_FOR_AGENTS_TO_ASSEMBLE
+[18:41:29] [Client thread/INFO]: [CHAT] Received mission: §9Setup Farm
+[18:41:29] [Client thread/INFO]: [CHAT] Source: §alocalhost
+[18:41:29] [Server thread/INFO]: [STDOUT]: SERVER e

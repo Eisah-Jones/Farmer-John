@@ -78,7 +78,6 @@ def spawn_plots(f, n):
                     temp.append(a)
         spawns.append(temp)
 
-    print(len(spawns))
     for plot, spawn in zip(plots, spawns):
         for s in spawn:
             for i in range(len(plot)):
