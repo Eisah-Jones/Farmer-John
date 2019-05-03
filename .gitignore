@@ -1,0 +1,6 @@
+!*.py
+!docs
+!*.md
+!*.html
+!*.css
+!*.yml
