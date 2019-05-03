@@ -1,0 +1,71 @@
+---- Minecraft Crash Report ----
+// Shall we play a game?
+
+Time: 5/2/19 5:34 PM
+Description: Exception ticking world
+
+java.util.ConcurrentModificationException
+	at java.util.HashMap$HashIterator.remove(HashMap.java:1443)
+	at net.minecraft.world.gen.ChunkProviderServer.tick(ChunkProviderServer.java:277)
+	at net.minecraft.world.WorldServer.tick(WorldServer.java:210)
+	at net.minecraft.server.MinecraftServer.updateTimeLightAndEntities(MinecraftServer.java:784)
+	at net.minecraft.server.MinecraftServer.tick(MinecraftServer.java:699)
+	at net.minecraft.server.integrated.IntegratedServer.tick(IntegratedServer.java:156)
+	at net.minecraft.server.MinecraftServer.run(MinecraftServer.java:548)
+	at java.lang.Thread.run(Thread.java:745)
+
+
+A detailed walkthrough of the error, its code path and all known details is as follows:
+---------------------------------------------------------------------------------------
+
+-- Head --
+Thread: Server thread
+Stacktrace:
+	at java.util.HashMap$HashIterator.remove(HashMap.java:1443)
+	at net.minecraft.world.gen.ChunkProviderServer.tick(ChunkProviderServer.java:277)
+	at net.minecraft.world.WorldServer.tick(WorldServer.java:210)
+
+-- Affected level --
+Details:
+	Level name: TEMP_10000_7ede56fe-8f33-40e7-a2ba-8127cb2869cd
+	All players: 0 total; []
+	Chunk stats: ServerChunkCache: 353 Drop: 115
+	Level seed: 134880675954813992
+	Level generator: ID 01 - flat, ver 0. Features enabled: false
+	Level generator options: 2;10x0;1;
+	Level spawn location: World: (823,4,-1217), Chunk: (at 7,0,15 in 51,-77; contains blocks 816,0,-1232 to 831,255,-1217), Region: (1,-3; contains chunks 32,-96 to 63,-65, blocks 512,0,-1536 to 1023,255,-1025)
+	Level time: 4852 game time, 4852 day time
+	Level dimension: 0
+	Level storage version: 0x04ABD - Anvil
+	Level weather: Rain time: 12463 (now: false), thunder time: 105912 (now: false)
+	Level game mode: Game mode: survival (ID 0). Hardcore: false. Cheats: true
+Stacktrace:
+	at net.minecraft.server.MinecraftServer.updateTimeLightAndEntities(MinecraftServer.java:784)
+	at net.minecraft.server.MinecraftServer.tick(MinecraftServer.java:699)
+	at net.minecraft.server.integrated.IntegratedServer.tick(IntegratedServer.java:156)
+	at net.minecraft.server.MinecraftServer.run(MinecraftServer.java:548)
+	at java.lang.Thread.run(Thread.java:745)
+
+-- System Details --
+Details:
+	Minecraft Version: 1.11.2
+	Operating System: Mac OS X (x86_64) version 10.14
+	Java Version: 1.8.0_77, Oracle Corporation
+	Java VM Version: Java HotSpot(TM) 64-Bit Server VM (mixed mode), Oracle Corporation
+	Memory: 145282656 bytes (138 MB) / 601358336 bytes (573 MB) up to 1908932608 bytes (1820 MB)
+	JVM Flags: 1 total; -Xmx2G
+	IntCache: cache: 0, tcache: 0, allocated: 0, tallocated: 0
+	FML: MCP 9.38 Powered by Forge 13.20.0.2228 5 mods loaded, 5 mods active
+	States: 'U' = Unloaded 'L' = Loaded 'C' = Constructed 'H' = Pre-initialized 'I' = Initialized 'J' = Post-initialized 'A' = Available 'D' = Disabled 'E' = Errored
+	UCHIJAAAAAAAAAAAAAAAAAAA	minecraft{1.11.2} [Minecraft] (minecraft.jar) 
+	UCHIJAAAAAAAAAAAAAAAAAAA	mcp{9.19} [Minecraft Coder Pack] (minecraft.jar) 
+	UCHIJAAAAAAAAAAAAAAAAAAA	FML{8.0.99.99} [Forge Mod Loader] (forgeSrc-1.11.2-13.20.0.2228.jar) 
+	UCHIJAAAAAAAAAAAAAAAAAAA	forge{13.20.0.2228} [Minecraft Forge] (forgeSrc-1.11.2-13.20.0.2228.jar) 
+	UCHIJAAAAAAAAAAAAAAAAAAA	malmomod{0.37.0} [Microsoft Malmo Mod] (MalmoMod-0.37.0.jar) 
+	Loaded coremods (and transformers): 
+OverclockingPlugin (MalmoMod-0.37.0.jar)
+  com.microsoft.Malmo.OverclockingClassTransformer
+	Profiler Position: N/A (disabled)
+	Player Count: 0 / 8; []
+	Type: Integrated Server (map_client.txt)
+	Is Modded: Definitely; Client brand changed to 'fml,forge'
