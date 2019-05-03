@@ -8,10 +8,9 @@ import numpy as np
 import farm_generator as fg
 import pathfinding_network as pfn
 
-
 block_value = {"white_shulker_box": 0,
                "brown_shulker_box": 1,
-                "blue_shulker_box": 2}
+               "blue_shulker_box": 2}
 
 
 def spawn_farm(f, n, m):
@@ -21,8 +20,8 @@ def spawn_farm(f, n, m):
         m = mission
     """
     testing = False
-    for x, i in zip(range(-int(n/2), int(n/2)), range(n)):
-        for z, j in zip(range(-int(n/2), int(n/2)), range(n)):
+    for x, i in zip(range(-int(n / 2), int(n / 2)), range(n)):
+        for z, j in zip(range(-int(n / 2), int(n / 2)), range(n)):
             m.drawBlock(x, 0, z, f[0][i][j])
             if not testing:
                 m.drawBlock(x, 1, z, f[1][i][j])
@@ -36,8 +35,8 @@ def get_agent_pos(f, n):
         n = width of the farm
     """
     pos = None
-    for x, i in zip(range(-int(n/2), int(n/2)), range(n)):
-        for z, j in zip(range(-int(n/2), int(n/2)), range(n)):
+    for x, i in zip(range(-int(n / 2), int(n / 2)), range(n)):
+        for z, j in zip(range(-int(n / 2), int(n / 2)), range(n)):
             if f[0][i][j] == "white_shulker_box" and (random.random() < 0.02 or pos is None):
                 pos = (x, z)
     return pos
@@ -45,13 +44,13 @@ def get_agent_pos(f, n):
 
 def move_agent(i, a, pos):
     if i == 0:
-        command = "tp {} 2 {}".format(pos[0]+1, pos[1])
+        command = "tp {} 2 {}".format(pos[0] + 1, pos[1])
     elif i == 1:
-        command = "tp {} 2 {}".format(pos[0], pos[1]-1)
+        command = "tp {} 2 {}".format(pos[0], pos[1] - 1)
     elif i == 2:
-        command = "tp {} 2 {}".format(pos[0], pos[1]+1)
+        command = "tp {} 2 {}".format(pos[0], pos[1] + 1)
     else:
-        command = "tp {} 2 {}".format(pos[0]-1, pos[1])
+        command = "tp {} 2 {}".format(pos[0] - 1, pos[1])
     a.sendCommand(command)
 
 
@@ -59,11 +58,11 @@ def run_mission():
     random.seed(time.time())
     mission_xml = '''<?xml version="1.0" encoding="UTF-8" ?>
             <Mission xmlns="http://ProjectMalmo.microsoft.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-            
+
               <About>
                 <Summary>Setup Farm</Summary>
               </About>
-              
+
               <ServerSection>
                 <ServerHandlers>
                   <FlatWorldGenerator generatorString="2;10x0;1;"/>
@@ -73,7 +72,7 @@ def run_mission():
                   <ServerQuitWhenAnyAgentFinishes/>
                 </ServerHandlers>
               </ServerSection>
-              
+
               <AgentSection mode="Survival">
                 <Name>FarmerBot</Name>
                 <AgentStart>
@@ -91,13 +90,13 @@ def run_mission():
                 </AgentHandlers>
               </AgentSection>
             </Mission>'''
-            
+
     # Create Agent Host
     agent_host = MalmoPython.AgentHost()
     try:
-        agent_host.parse( sys.argv )
+        agent_host.parse(sys.argv)
     except RuntimeError as e:
-        print('ERROR:',e)
+        print('ERROR:', e)
         print(agent_host.getUsage())
         exit(1)
     if agent_host.receivedArgument("help"):
@@ -110,7 +109,7 @@ def run_mission():
 
     # Create Farm
     size = 32
-    size += size % 2 # Make sure the size is even
+    size += size % 2  # Make sure the size is even
     # 3D-array of the farm
     #   farm[0] = 2D-array color_shulker_box data
     #   farm[1] = 2D-array minecraft block data
@@ -141,7 +140,7 @@ def run_mission():
                 exit(1)
             else:
                 time.sleep(2)
-                
+
     # Loop until mission starts:
     print("Waiting for the mission to start ", end=' ')
     world_state = agent_host.getWorldState()
@@ -170,14 +169,14 @@ def run_mission():
             ob = json.loads(msg)
             # Get agent's current position
             start = [int(float(ob.get(u'XPos', 0))), int(float(ob.get(u'ZPos', 0)))]
-            
+
             # Get adjacent blocks to agent
             adj = []
             for i in range(-1, 2):
                 for j in range(-1, 2):
-                    if not (i == j or i+j == 0):
-                        adj.append(block_value[farm[0][start[0]+i][start[1]+j]])
-                        
+                    if not (i == j or i + j == 0):
+                        adj.append(block_value[farm[0][start[0] + i][start[1] + j]])
+
             # Input vector for path finding NN
             path_finding_input = np.array(start + dest + adj)
             action = pf.choose_action(path_finding_input)
@@ -191,7 +190,7 @@ def run_mission():
     print("\nMission ended")
     # Mission has ended.
     time.sleep(1)
-        
-        
+
+
 if __name__ == "__main__":
     run_mission()
