@@ -4,9 +4,11 @@ import os
 import sys
 import time
 import random
-import farm_generator as fg
+import json
 import tensorflow as tf
 import numpy as np
+import farm_generator as fg
+import pathfinding_network as pfNN
 
 
 block_value = {"white_shulker_box": 0,
@@ -43,6 +45,19 @@ def get_agent_pos(f, n):
     return pos
 
 
+def move_agent(i, a, pos):
+    command = None
+    if (i == 0):
+        command = "tp {} 2 {}".format(pos[0]+1, pos[1])
+    elif (i == 1):
+        command = "tp {} 2 {}".format(pos[0], pos[1]-1)
+    elif (i == 2):
+        command = "tp {} 2 {}".format(pos[0], pos[1]+1)
+    else:
+        command = "tp {} 2 {}".format(pos[0]-1, pos[1])
+    a.sendCommand(command)
+
+
 def run_mission():
     random.seed(time.time())
     missionXML='''<?xml version="1.0" encoding="UTF-8" ?>
@@ -57,7 +72,7 @@ def run_mission():
                   <FlatWorldGenerator generatorString="2;10x0;1;"/>
                   <DrawingDecorator>
                   </DrawingDecorator>
-                  <ServerQuitFromTimeUp timeLimitMs="1000"/>
+                  <ServerQuitFromTimeUp timeLimitMs="10000"/>
                   <ServerQuitWhenAnyAgentFinishes/>
                 </ServerHandlers>
               </ServerSection>
@@ -73,6 +88,7 @@ def run_mission():
                 <AgentHandlers>
                   <ObservationFromFullStats/>
                   <ContinuousMovementCommands/>
+                  <AbsoluteMovementCommands/>
                 </AgentHandlers>
               </AgentSection>
             </Mission>'''
@@ -112,6 +128,8 @@ def run_mission():
             if(farm[0][r][c] == "brown_shulker_box"):
                 farmland.append((r, c))
 
+    ## Pathfinding neural network
+    pf = pfNN.QPathfinding(4, 8)
 
     ## Attempt to start a mission:
     max_retries = 3
@@ -144,37 +162,37 @@ def run_mission():
     ## Loop until mission ends:
     while world_state.is_mission_running:
         print(".", end="")
-        time.sleep(0.1)
+        time.sleep(0.5)
         world_state = agent_host.getWorldState()
         for error in world_state.errors:
             print("Error:",error.text)
 
         if(len(world_state.observations) > 0):
-            obs = world_state.observations[-1].text
-
+            msg = world_state.observations[-1].text
+            ob = json.loads(msg)
             # Get agent's current position
-            x_idx = obs[obs.index("\"XPos\":"):].index(':') + obs.index("\"XPos\":") + 1
-            x_end = obs[x_idx:].index(',') + x_idx
-            x = int(float(obs[x_idx : x_end]))
-
-            z_idx = obs[obs.index("\"ZPos\":"):].index(':') + obs.index("\"ZPos\":") + 1
-            z_end = obs[z_idx:].index(',') + z_idx
-            z = int(float(obs[z_idx : z_end]))
-
-            start = [x, z]
-
+            start = [int(float(ob.get(u'XPos', 0))), int(float(ob.get(u'ZPos', 0)))]
+            
             # Get adjacent blocks to agent
             adj = []
             for i in range(-1, 2):
                 for j in range(-1, 2):
                     if(not (i == j or i+j == 0)):
-                        adj.append(block_value[farm[0][x+i][z+j]])
-
+                        adj.append(block_value[farm[0][start[0]+i][start[1]+j]])
+                        
             ## Input vector for pathfinding NN
-            pathfindingInput = np.array([x, z] + dest + adj)
+            pathfindingInput = np.array(start + dest + adj)
+            action = pf.choose_action(pathfindingInput)
+            move_agent(action, agent_host, start)
+            #print(action)
+            ## do action and get next observation/reward
+            #observation_, reward, done = env.step()
+            ## store transitions
+            ## train for a few steps
 
     print("\nMission ended")
     ## Mission has ended.
+    time.sleep(1)
         
         
 if __name__ == "__main__":
