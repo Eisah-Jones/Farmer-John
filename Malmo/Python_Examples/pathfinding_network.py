@@ -4,7 +4,9 @@ import numpy as np
 np.random.seed(1)
 tf.set_random_seed(1)
 
-class QPathfinding():
+
+class QPathFinding:
+
     def __init__(self,
                  n_actions,
                  n_features,
@@ -15,6 +17,7 @@ class QPathfinding():
                  memory_size=500,
                  batch_size=32,
                  e_increment=None):
+        self.memory_counter = 0
         self.n_actions = n_actions
         self.n_features = n_features
         self.lr = learning_rate
@@ -38,7 +41,6 @@ class QPathfinding():
         self.sess.run(tf.global_variables_initializer())
         self.cost_his = []
 
-
     def _build_net(self):
         self.s = tf.placeholder(tf.float32, [None, self.n_features], name='s') # Input state
         self.s_ = tf.placeholder(tf.float32, [None, self.n_features], name = 's_') # Input next state
@@ -47,13 +49,13 @@ class QPathfinding():
 
         w_initializer, b_initializer = tf.random_normal_initializer(0.0, 0.3), tf.constant_initializer(0.1)
 
-        ## Evaluation network
+        # Evaluation network
         with tf.variable_scope('eval_net'):
             e1 = tf.layers.dense(self.s, 20, tf.nn.relu, kernel_initializer=w_initializer,
                                  bias_initializer=b_initializer, name='e1')
             self.q_eval = tf.layers.dense(e1, self.n_actions, kernel_initializer=w_initializer,
                                           bias_initializer=b_initializer, name='q')
-        ## Target network
+        # Target network
         with tf.variable_scope('target_net'):
             t1 = tf.layers.dense(self.s_, 20, tf.nn.relu, kernel_initializer=w_initializer,
                                  bias_initializer=b_initializer, name='t1')
@@ -71,28 +73,25 @@ class QPathfinding():
         with tf.variable_scope('train'):
             self._train_op = tf.train.RMSPropOptimizer(self.lr).minimize(self.loss)
 
-
     def store_transition(self, s, a, r, s_):
-        if(not hasattr(self, 'memory_counter')):
+        if not hasattr(self, 'memory_counter'):
             self.memory_counter = 0
         transition = np.hstack((s, [a, r], s_))
         index = self.memory_counter % self.memory_size
         self.memory[index, :] = transition
         self.memory_counter += 1
 
-
     def choose_action(self, observation):
         observation = observation[np.newaxis, :]
-        if(np.random.uniform() < self.epsilon):
+        if np.random.uniform() < self.epsilon:
             actions_value = self.sess.run(self.q_eval, feed_dict={self.s: observation})
             action = np.argmax(actions_value)
         else:
             action = np.random.randint(0, self.n_actions)
         return action
 
-
-    def learn(self):
-        if(self.learn_step_counter % self.rti == 0):
+    def train(self):
+        if self.learn_step_counter % self.rti == 0:
             self.sess.run(self.replace_target_op)
 
         if self.memory_counter > self.memory_size:
@@ -102,9 +101,9 @@ class QPathfinding():
         batch_memory = self.memory[sample_index, :]
 
         _, cost = self.sess.run([self._train_op, self.loss],
-                                feed_dict={ self.s: batch_memory[:, :self.n_features],
-                                            self.a: batch_memory[:, self.n_features],
-                                            self.r: batch_memory[:, self.n_features+1],
+                                feed_dict={self.s: batch_memory[:, :self.n_features],
+                                           self.a: batch_memory[:, self.n_features],
+                                           self.r: batch_memory[:, self.n_features+1],
                                            self.s_: batch_memory[:, -self.n_features:],
                                            })
 
