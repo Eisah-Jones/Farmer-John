@@ -1,5 +1,7 @@
 # Farmer-John
 
+# Do Not Push Directly To Master Branch
+
 Source code is in Malmo/Python_Examples
 
 Any code for the project MUST be in this directory and not in any subdirectory
