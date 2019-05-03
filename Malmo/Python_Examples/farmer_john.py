@@ -83,8 +83,8 @@ def run_mission():
                   <Placement yaw="180"/>
                   <Inventory>
                     <InventoryObject slot="0" type="wheat_seeds" quantity="64"/>
-                    <InventoryObject slot="0" type="carrot" quantity="64"/>
-                    <InventoryObject slot="0" type="potato" quantity="64"/>
+                    <InventoryObject slot="1" type="carrot" quantity="64"/>
+                    <InventoryObject slot="2" type="potato" quantity="64"/>
                   </Inventory>
                 </AgentStart>
                 <AgentHandlers>
