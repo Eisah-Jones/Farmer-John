@@ -1,4 +1,3 @@
-from builtins import range
 import MalmoPython
 import sys
 import time
