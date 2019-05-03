@@ -7,8 +7,8 @@ import random
 import json
 import tensorflow as tf
 import numpy as np
-import Malmo.Python_Examples.farm_generator as fg
-import Malmo.Python_Examples.pathfinding_network as pfNN
+import farm_generator as fg
+import pathfinding_network as pfNN
 
 
 block_value = {"white_shulker_box": 0,
