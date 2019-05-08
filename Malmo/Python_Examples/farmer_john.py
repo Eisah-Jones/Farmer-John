@@ -8,6 +8,8 @@ import numpy as np
 import farm_generator as fg
 import pathfinding_network as pfn
 import tensorflow as tf
+from algorithms.dikjstra import get_path_dikjstra
+import pprint
 
 pathfinding_value = {"white_shulker_box": 0,
                      "brown_shulker_box": 1,
@@ -69,9 +71,9 @@ def move_agent(i, a, pos, f):
     else:
         x, z = pos[0] - 1, pos[1]
     if (x < 0 or x > 31 or z < 0 or z > 31 or f[x][z] in ["brown_shulker_box", "blue_shulker_box"]):
-        return -1
-    a.sendCommand("tp {} 2 {}".format(x+0.5, z+0.5))
-    return 1
+        return -1, (x,z)
+    a.sendCommand("tp {} 2 {}".format(x, z))
+    return 1, (x,z)
 
 # <ServerQuitFromTimeUp timeLimitMs="10000"/>
 def run_mission():
@@ -187,21 +189,21 @@ def run_mission():
     total_reward = 0
     ## --- PFNN
 
-##    if not os.path.exists(pfn.path):
-##        os.makedirs(pfn.path)
+    if not os.path.exists(pfn.path):
+        os.makedirs(pfn.path)
     ## Setup tensorflow session
     with tf.Session() as sess:
         sess.run(init)
         if pfn.load_model == True:
-            ckpt = tf.train.get_checkpoint_state(path)
-            #saver.restore(sess, cpkt.model_checkpoint_path)
+            ckpt = tf.train.get_checkpoint_state(pfn.path)
+            saver.restore(sess, ckpt.model_checkpoint_path)
         for i in range(pfn.num_episodes):
             total_reward = 0
             episodeBuffer = pfn.experience_buffer()
             dest = list(random.choice(farmland))
             print(i, dest)
             my_mission.drawBlock(dest[0], 4, dest[1], "red_shulker_box")
-            s = get_pathfinding_input(farm[0], agent_spawn, dest)
+            s = get_pathfinding_input(farm[0], start, dest)
             s = pfn.process_state(s)
             d = False
             rAll = 0
@@ -209,14 +211,8 @@ def run_mission():
 
             # Loop until mission ends:
             while world_state.is_mission_running:
-                #time.sleep(0.1)
                 ## -- PFNN
                 # Get agent action
-                if np.random.rand(1) < e or total_steps < pfn.pre_train_steps:
-                    a = np.random.randint(0, 4)
-                else:
-                    a = sess.run(mainQN.predict, feed_dict={mainQN.scalarInput:[s]})[0]
-                move_result = move_agent(a, agent_host, start, farm[0])
                 world_state = agent_host.getWorldState()
                 for error in world_state.errors:
                     print("Error:", error.text)
@@ -224,12 +220,20 @@ def run_mission():
                     # Get new world state, reward, d
                     msg = world_state.observations[-1].text
                     ob = json.loads(msg)
-                    start = [int(float(ob.get(u'XPos', 0))), int(float(ob.get(u'ZPos', 0)))]
+                    start = [int(ob['XPos']), int(ob['ZPos'])]
                     s1 = get_pathfinding_input(farm[0], start, dest)
                     s1 = pfn.process_state(s1)
-                    r = pfn.get_reward(start, dest, move_result)
+                    optimal_path = get_path_dikjstra(start, dest, s1)
+                    if np.random.rand(1) < e or total_steps < pfn.pre_train_steps:
+                        a = np.random.randint(0, 4)
+                    else:
+                        a = sess.run(mainQN.predict, feed_dict={mainQN.scalarInput: [s]})[0]
+                    move_result = move_agent(a, agent_host, start, farm[0])
+                    move_loc = move_result[1]
+                    did_move = move_result[0]
+                    r = pfn.get_reward(move_loc, dest, did_move, optimal_path)
                     #print(total_steps, r)
-                    if r == 1:
+                    if r == 100:
                         d = True
                     total_steps += 1
                     episodeBuffer.add(np.reshape(np.array([s, a, r, s1, d]), [1, 5]))
@@ -255,18 +259,18 @@ def run_mission():
                     total_reward += r
                     s = s1
 
-                    if d == True or total_reward < -10000:
-                        if total_reward < -10000:
+                    if d == True or total_reward < -2500:
+                        if total_reward < -2500:
                             print("LOST")
                         break
 
                 myBuffer.add(episodeBuffer.buffer)
                 jList.append(j)
                 rList.append(rAll)
-                #if i%1000 == 0:
-                    #saver.save(sess, pfn.path+"/model-"+str(i)+".ckpt")
-            #saver.save(sess, pfn.path+"/model-"+str(i)+".ckpt")
-            ## -- PFNN
+                if i % 100 == 0:
+                    saver.save(sess, pfn.path+"model-att-"+str(i)+".ckpt")
+            saver.save(sess, pfn.path+"model-epi-"+str(i)+".ckpt")
+            # -- PFNN
               
             pfn.reset_already_travelled()
             print("\nMission ended")

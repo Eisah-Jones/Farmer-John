@@ -6,6 +6,8 @@ import tensorflow.contrib.slim as slim
 import tensorflow.keras.layers as kl
 import numpy as np
 
+import time
+
 np.random.seed(1)
 tf.set_random_seed(1)
 
@@ -21,7 +23,7 @@ num_episodes = 1000
 pre_train_steps = 1000
 max_epLength = 50
 load_model = False
-path = "/testing"
+path = "testing/"
 h_size = 256
 tau = 0.001
 
@@ -107,23 +109,41 @@ def update_target(op_holder, sess):
 
 already_travelled = []
 
-def get_reward(a, b, mr):
-    dist = ((b[0] - a[0])**2 + (b[1] - a[1])**2)**0.5
+
+def get_row(idx, dim):
+    return int(idx / dim)
+
+
+def get_col(idx, dim):
+    return idx % dim
+
+def get_reward(start, end, moved, optimal_path):
+    global already_travelled
+    path, dim = optimal_path
+    optimal_move = path[1]
+    optimal_x = get_row(optimal_move, dim)
+    optimal_y = get_col(optimal_move, dim)
+
+    if (optimal_x, optimal_y) == (start[0], start[1]):
+        return 10
+
+    dist = len(path)-1
     if dist < 2:
-        return 1
-    result = -dist * 0.25
-    if mr == -1:
-        result -= 0.8
+        return 100
+    result = -dist * 0.08
+    if moved == -1:
+        result -= 2
     else:
         result -= 0.04
-    if a in already_travelled:
-        result -= 0.5
+    if start in already_travelled:
+        result -= 0.25
     else:
-        already_travelled.append(a)
+        already_travelled.append(start)
     return result
 
 
 def reset_already_travelled():
+    global already_travelled
     already_travelled = []
 
 
