@@ -1,129 +1,130 @@
+import os
+import math
+import random
 import tensorflow as tf
+import tensorflow.contrib.slim as slim
+import tensorflow.keras.layers as kl
 import numpy as np
 
 np.random.seed(1)
 tf.set_random_seed(1)
 
+## Training parameters
+
+batch_size = 32
+update_freq = 4
+y = 0.99
+startE = 1
+endE = 0.1
+annealing_steps = 1000.0
+num_episodes = 1000
+pre_train_steps = 1000
+max_epLength = 50
+load_model = False
+path = "/testing"
+h_size = 256
+tau = 0.001
+
 
 class QPathFinding:
 
-    def __init__(self,
-                 n_actions,
-                 n_features,
-                 learning_rate=0.01,
-                 g=0.9,
-                 e=0.9,
-                 replace_target_iter=300,
-                 memory_size=500,
-                 batch_size=32,
-                 e_increment=None):
-        self.memory_counter = 0
-        self.n_actions = n_actions
-        self.n_features = n_features
-        self.lr = learning_rate
-        self.gamma = g
-        self.epsilon = e
-        self.rti = 300
-        self.memory_size = memory_size
-        self.batch_size = batch_size
-        self.epsilon_increment = e_increment
-        self.epsilon = 0 if e_increment is not None else self.epsilon
+    def __init__(self, h_size):
+        self.scalarInput = tf.placeholder(shape=[None,1024], dtype=tf.float32)
+        self.imageIn = tf.reshape(self.scalarInput, shape=[-1, 32, 32, 1])
 
-        self.learn_step_counter = 0
-        self.memory = np.zeros((self.memory_size, n_features * 2 + 2))
+        self.conv1 = slim.conv2d(inputs = self.imageIn, num_outputs = 32, \
+                                 kernel_size = [8, 8], stride = [2, 2], \
+                                 padding = 'VALID', biases_initializer=None)
 
-        self._build_net()
-        t_params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='target_net')
-        e_params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='eval_net')
-        self.replace_target_op = [tf.assign(t, e) for t, e in zip(t_params, e_params)]
+        self.conv2 = slim.conv2d(inputs = self.conv1, num_outputs = 64, \
+                                 kernel_size = [5, 5], stride = [2, 2], \
+                                 padding = 'VALID', biases_initializer=None)
 
-        self.sess = tf.Session()
-        self.sess.run(tf.global_variables_initializer())
-        self.cost_his = []
+        self.conv3 = slim.conv2d(inputs = self.conv2, num_outputs = 64, \
+                                 kernel_size = [3, 3], stride = [2, 2], \
+                                 padding = 'VALID', biases_initializer=None)
 
-    def _build_net(self):
-        self.s = tf.placeholder(tf.float32, [None, self.n_features], name='s')  # Input state
-        self.s_ = tf.placeholder(tf.float32, [None, self.n_features], name='s_')  # Input next state
-        self.r = tf.placeholder(tf.float32, [None, ], name='r')  # Input reward
-        self.a = tf.placeholder(tf.int32, [None, ], name='a')  # Input action
+##        self.conv4 = tf.layers.conv2d(inputs = self.conv3, filters = h_size, \
+##                                 kernel_size = [1, 1], strides = [1, 1], \
+##                                 padding = 'VALID')
 
-        w_initializer, b_initializer = tf.random_normal_initializer(0.0, 0.3), tf.constant_initializer(0.1)
+        self.streamAC, self.streamVC = tf.split(self.conv3, 2, 1)
+        self.streamA = slim.flatten(self.streamAC)
+        self.streamV = slim.flatten(self.streamVC)
+        xavier_init = tf.contrib.layers.xavier_initializer()
+        self.AW = tf.Variable(xavier_init([h_size//2, 4])) # 4 is number of environment actions
+        self.VW = tf.Variable(xavier_init([h_size//2, 1]))
+        self.Advantage = tf.matmul(self.streamA, self.AW)
+        self.Value = tf.matmul(self.streamV, self.VW)
 
-        # Evaluation network
-        with tf.variable_scope('eval_net'):
-            e1 = tf.layers.dense(self.s, 20, tf.nn.relu, kernel_initializer=w_initializer,
-                                 bias_initializer=b_initializer, name='e1')
-            self.q_eval = tf.layers.dense(e1, self.n_actions, kernel_initializer=w_initializer,
-                                          bias_initializer=b_initializer, name='q')
-        # Target network
-        with tf.variable_scope('target_net'):
-            t1 = tf.layers.dense(self.s_, 20, tf.nn.relu, kernel_initializer=w_initializer,
-                                 bias_initializer=b_initializer, name='t1')
-            self.q_next = tf.layers.dense(t1, self.n_actions, kernel_initializer=w_initializer,
-                                          bias_initializer=b_initializer, name='t2')
+        self.Qout = self.Value = tf.subtract(self.Advantage, tf.reduce_mean(self.Advantage, axis=1, keep_dims=True))
+        self.predict = tf.argmax(self.Qout, 1)
 
-        with tf.variable_scope('q_target'):
-            q_target = self.r + self.gamma * tf.reduce_max(self.q_next, axis=1, name='Qmax_s_')
-            self.q_target = tf.stop_gradient(q_target)
-        with tf.variable_scope('q_eval'):
-            a_indices = tf.stack([tf.range(tf.shape(self.a)[0], dtype=tf.int32), self.a], axis=1)
-            self.q_eval_wrt_a = tf.gather_nd(params=self.q_eval, indices=a_indices)
-        with tf.variable_scope('loss'):
-            self.loss = tf.reduce_mean(tf.squared_difference(self.q_target, self.q_eval_wrt_a, name='TD_error'))
-        with tf.variable_scope('train'):
-            self._train_op = tf.train.RMSPropOptimizer(self.lr).minimize(self.loss)
+        self.targetQ = tf.placeholder(shape=[None], dtype=tf.float32)
+        self.actions = tf.placeholder(shape=[None], dtype=tf.int32)
+        self.actions_onehot = tf.one_hot(self.actions, 4, dtype=tf.float32)
 
-    def store_transition(self, s, a, r, s_):
-        if not hasattr(self, 'memory_counter'):
-            self.memory_counter = 0
-        transition = np.hstack((s, [a, r], s_))
-        index = self.memory_counter % self.memory_size
-        self.memory[index, :] = transition
-        self.memory_counter += 1
+        self.Q = tf.reduce_sum(tf.multiply(self.Qout, self.actions_onehot), axis=1)
 
-    def choose_action(self, observation):
-        observation = observation[np.newaxis, :]
-        if np.random.uniform() < self.epsilon:
-            actions_value = self.sess.run(self.q_eval, feed_dict={self.s: observation})
-            action = np.argmax(actions_value)
-        else:
-            action = np.random.randint(0, self.n_actions)
-        return action
-
-    def train(self):
-        if self.learn_step_counter % self.rti == 0:
-            self.sess.run(self.replace_target_op)
-
-        if self.memory_counter > self.memory_size:
-            sample_index = np.random.choice(self.memory_size, size=self.batch_size)
-        else:
-            sample_index = np.random.choice(self.memory_counter, size=self.batch_size)
-        batch_memory = self.memory[sample_index, :]
-
-        _, cost = self.sess.run([self._train_op, self.loss],
-                                feed_dict={self.s: batch_memory[:, :self.n_features],
-                                           self.a: batch_memory[:, self.n_features],
-                                           self.r: batch_memory[:, self.n_features + 1],
-                                           self.s_: batch_memory[:, -self.n_features:],
-                                           })
-
-        self.cost_his.append(cost)
-        self.epsilon = self.epsilon + self.epsilon_increment if self.epsilon < self.epsilon_max else self.epsilon_max
-        self.learn_step_counter += 1
+        self.td_error = tf.square(self.targetQ - self.Q)
+        self.loss = tf.reduce_mean(self.td_error)
+        self.trainer = tf.train.AdamOptimizer(learning_rate=0.0001)
+        self.updateModel = self.trainer.minimize(self.loss)
 
 
 
+class experience_buffer():
+    def __init__(self, buffer_size = 5000):
+        self.buffer = []
+        self.buffer_size = buffer_size
+
+    def add(self, experience):
+        if len(self.buffer) + len(experience) >= self.buffer_size:
+            self.buffer[0:(len(experience)+len(self.buffer))-self.buffer_size] = []
+        self.buffer.extend(experience)
+
+    def sample(self, size):
+        return np.reshape(np.array(random.sample(self.buffer, size)), [size, 5])
 
 
+def process_state(states):
+    return np.reshape(states, [1024])
 
 
+def updateTargetGraph(tfVars, tau):
+    total_vars = len(tfVars)
+    op_holder = []
+    for idx, var in enumerate(tfVars[0:total_vars//2]):
+        op_holder.append(tfVars[idx+total_vars//2].assign((var.value()*tau) \
+                        + ((1-tau)*tfVars[idx+total_vars//2].value())))
+    return op_holder
 
 
+def update_target(op_holder, sess):
+    for op in op_holder:
+        sess.run(op)
 
 
+already_travelled = []
+
+def get_reward(a, b, mr):
+    dist = ((b[0] - a[0])**2 + (b[1] - a[1])**2)**0.5
+    if dist < 2:
+        return 1
+    result = -dist * 0.25
+    if mr == -1:
+        result -= 0.8
+    else:
+        result -= 0.04
+    if a in already_travelled:
+        result -= 0.5
+    else:
+        already_travelled.append(a)
+    return result
 
 
-
+def reset_already_travelled():
+    already_travelled = []
 
 
 

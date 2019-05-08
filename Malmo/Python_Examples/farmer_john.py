@@ -1,15 +1,19 @@
 import MalmoPython
 import sys
+import os
 import time
 import random
 import json
 import numpy as np
 import farm_generator as fg
 import pathfinding_network as pfn
+import tensorflow as tf
 
-block_value = {"white_shulker_box": 0,
-               "brown_shulker_box": 1,
-               "blue_shulker_box": 2}
+pathfinding_value = {"white_shulker_box": 0,
+                     "brown_shulker_box": 1,
+                      "blue_shulker_box": 2,
+                                 "start": 3,
+                                  "dest": 4}
 
 
 def spawn_farm(f, n, m):
@@ -19,13 +23,13 @@ def spawn_farm(f, n, m):
         m = mission
     """
     testing = False
-    for x, i in zip(range(-int(n / 2), int(n / 2)), range(n)):
-        for z, j in zip(range(-int(n / 2), int(n / 2)), range(n)):
-            m.drawBlock(x, 0, z, f[0][i][j])
+    for i in range(n):
+        for j in range(n):
+            m.drawBlock(i, 0, j, f[0][i][j])
             if not testing:
-                m.drawBlock(x, 1, z, f[1][i][j])
+                m.drawBlock(i, 1, j, f[1][i][j])
             else:
-                m.drawBlock(x, 1, z, "air")
+                m.drawBlock(i, 1, j, "air")
 
 
 def get_agent_pos(f, n):
@@ -34,25 +38,42 @@ def get_agent_pos(f, n):
         n = width of the farm
     """
     pos = None
-    for x, i in zip(range(-int(n / 2), int(n / 2)), range(n)):
-        for z, j in zip(range(-int(n / 2), int(n / 2)), range(n)):
+    for i in range(n):
+        for j in range(n):
             if f[0][i][j] == "white_shulker_box" and (random.random() < 0.02 or pos is None):
-                pos = (x, z)
+                pos = (i, j)
     return pos
 
 
-def move_agent(i, a, pos):
+def get_pathfinding_input(f, s, d):
+    result = []
+    for r in f:
+        temp = []
+        for c in r:
+            temp.append(pathfinding_value[c])
+        result.append(temp)
+    result[s[0]][s[1]] = pathfinding_value["start"]
+    result[d[0]][d[1]] = pathfinding_value["dest"]
+    #print("\n", result)
+    return result
+
+
+def move_agent(i, a, pos, f):
+    x, z = 0, 0
     if i == 0:
-        command = "tp {} 2 {}".format(pos[0] + 1, pos[1])
+        x, z = pos[0] + 1, pos[1]
     elif i == 1:
-        command = "tp {} 2 {}".format(pos[0], pos[1] - 1)
+        x, z = pos[0], pos[1] - 1
     elif i == 2:
-        command = "tp {} 2 {}".format(pos[0], pos[1] + 1)
+        x, z = pos[0], pos[1] + 1
     else:
-        command = "tp {} 2 {}".format(pos[0] - 1, pos[1])
-    a.sendCommand(command)
+        x, z = pos[0] - 1, pos[1]
+    if (x < 0 or x > 31 or z < 0 or z > 31 or f[x][z] in ["brown_shulker_box", "blue_shulker_box"]):
+        return -1
+    a.sendCommand("tp {} 2 {}".format(x+0.5, z+0.5))
+    return 1
 
-
+# <ServerQuitFromTimeUp timeLimitMs="10000"/>
 def run_mission():
     random.seed(time.time())
     mission_xml = '''<?xml version="1.0" encoding="UTF-8" ?>
@@ -67,7 +88,6 @@ def run_mission():
                   <FlatWorldGenerator generatorString="2;10x0;1;"/>
                   <DrawingDecorator>
                   </DrawingDecorator>
-                  <ServerQuitFromTimeUp timeLimitMs="10000"/>
                   <ServerQuitWhenAnyAgentFinishes/>
                 </ServerHandlers>
               </ServerSection>
@@ -75,7 +95,7 @@ def run_mission():
               <AgentSection mode="Survival">
                 <Name>FarmerBot</Name>
                 <AgentStart>
-                  <Placement yaw="180"/>
+                  <Placement yaw="90"/>
                   <Inventory>
                     <InventoryObject slot="0" type="wheat_seeds" quantity="64"/>
                     <InventoryObject slot="1" type="carrot" quantity="64"/>
@@ -124,9 +144,6 @@ def run_mission():
             if farm[0][r][c] == "brown_shulker_box":
                 farmland.append((r, c))
 
-    # Path finding neural network
-    pf = pfn.QPathFinding(4, 8)
-
     # Attempt to start a mission:
     max_retries = 3
     for retry in range(max_retries):
@@ -152,43 +169,109 @@ def run_mission():
 
     print("\nMission running ", end=' ')
 
-    # For testing path finding
-    dest = list(random.choice(farmland))
+    ## -- PFNN var init
+    mainQN = pfn.QPathFinding(pfn.h_size)
+    targetQN = pfn.QPathFinding(pfn.h_size)
 
-    # Loop until mission ends:
-    while world_state.is_mission_running:
-        print(".", end="")
-        time.sleep(0.5)
-        world_state = agent_host.getWorldState()
-        for error in world_state.errors:
-            print("Error:", error.text)
+    init = tf.global_variables_initializer()
+    saver = tf.train.Saver()
+    trainables = tf.trainable_variables()
+    targetOps = pfn.updateTargetGraph(trainables, pfn.tau)
+    myBuffer = pfn.experience_buffer()
+    e = pfn.startE
+    stepDrop = (pfn.startE - pfn.endE)/pfn.annealing_steps
+    jList = []
+    rList = []
+    total_steps = 0
+    start = agent_spawn
+    total_reward = 0
+    ## --- PFNN
 
-        if len(world_state.observations) > 0:
-            msg = world_state.observations[-1].text
-            ob = json.loads(msg)
-            # Get agent's current position
-            start = [int(float(ob.get(u'XPos', 0))), int(float(ob.get(u'ZPos', 0)))]
+##    if not os.path.exists(pfn.path):
+##        os.makedirs(pfn.path)
+    ## Setup tensorflow session
+    with tf.Session() as sess:
+        sess.run(init)
+        if pfn.load_model == True:
+            ckpt = tf.train.get_checkpoint_state(path)
+            #saver.restore(sess, cpkt.model_checkpoint_path)
+        for i in range(pfn.num_episodes):
+            total_reward = 0
+            episodeBuffer = pfn.experience_buffer()
+            dest = list(random.choice(farmland))
+            print(i, dest)
+            my_mission.drawBlock(dest[0], 4, dest[1], "red_shulker_box")
+            s = get_pathfinding_input(farm[0], agent_spawn, dest)
+            s = pfn.process_state(s)
+            d = False
+            rAll = 0
+            j = 0
 
-            # Get adjacent blocks to agent
-            adj = []
-            for i in range(-1, 2):
-                for j in range(-1, 2):
-                    if not (i == j or i + j == 0):
-                        adj.append(block_value[farm[0][start[0] + i][start[1] + j]])
+            # Loop until mission ends:
+            while world_state.is_mission_running:
+                #time.sleep(0.1)
+                ## -- PFNN
+                # Get agent action
+                if np.random.rand(1) < e or total_steps < pfn.pre_train_steps:
+                    a = np.random.randint(0, 4)
+                else:
+                    a = sess.run(mainQN.predict, feed_dict={mainQN.scalarInput:[s]})[0]
+                move_result = move_agent(a, agent_host, start, farm[0])
+                world_state = agent_host.getWorldState()
+                for error in world_state.errors:
+                    print("Error:", error.text)
+                if len(world_state.observations) > 0:
+                    # Get new world state, reward, d
+                    msg = world_state.observations[-1].text
+                    ob = json.loads(msg)
+                    start = [int(float(ob.get(u'XPos', 0))), int(float(ob.get(u'ZPos', 0)))]
+                    s1 = get_pathfinding_input(farm[0], start, dest)
+                    s1 = pfn.process_state(s1)
+                    r = pfn.get_reward(start, dest, move_result)
+                    #print(total_steps, r)
+                    if r == 1:
+                        d = True
+                    total_steps += 1
+                    episodeBuffer.add(np.reshape(np.array([s, a, r, s1, d]), [1, 5]))
+                    if total_steps > pfn.pre_train_steps:
+                        if e > pfn.endE:
+                            e -= stepDrop
 
-            # Input vector for path finding NN
-            path_finding_input = np.array(start + dest + adj)
-            action = pf.choose_action(path_finding_input)
-            move_agent(action, agent_host, start)
-            # print(action)
-            # do action and get next observation/reward
-            # observation_, reward, done = env.step()
-            # store transitions
-            # train for a few steps
+                        if total_steps % (pfn.update_freq) == 0:
+                            trainBatch = myBuffer.sample(pfn.batch_size)
+                            Q1 = sess.run(mainQN.predict, feed_dict={mainQN.scalarInput:np.vstack(trainBatch[:,3])})
+                            Q2 = sess.run(targetQN.Qout, feed_dict={targetQN.scalarInput:np.vstack(trainBatch[:,3])})
+                            end_multiplier = -(trainBatch[:, 4] - 1)
+                            doubleQ = Q2[range(pfn.batch_size), Q1]
+                            targetQ = trainBatch[:,2] + (pfn.y*doubleQ*end_multiplier)
+                            try:
+                                _ = sess.run(mainQN.updateModel, \
+                                    feed_dict={mainQN.scalarInput:np.vstack(trainBatch[:,0]), \
+                                               mainQN.targetQ:targetQ, mainQN.actions:trainBatch[:,1]})
+                                pfn.update_target(targetOps, sess)
+                            except:
+                                pass
+                    rAll += r
+                    total_reward += r
+                    s = s1
 
-    print("\nMission ended")
-    # Mission has ended.
-    time.sleep(1)
+                    if d == True or total_reward < -10000:
+                        if total_reward < -10000:
+                            print("LOST")
+                        break
+
+                myBuffer.add(episodeBuffer.buffer)
+                jList.append(j)
+                rList.append(rAll)
+                #if i%1000 == 0:
+                    #saver.save(sess, pfn.path+"/model-"+str(i)+".ckpt")
+            #saver.save(sess, pfn.path+"/model-"+str(i)+".ckpt")
+            ## -- PFNN
+              
+            pfn.reset_already_travelled()
+            print("\nMission ended")
+            # Mission has ended.
+            time.sleep(1)
 
 
 if __name__ == "__main__":
