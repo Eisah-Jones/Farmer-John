@@ -12,42 +12,43 @@ np.random.seed(1)
 tf.set_random_seed(1)
 
 ## Training parameters
-
 batch_size = 32
 update_freq = 4
 y = 0.99
 startE = 1
 endE = 0.1
-annealing_steps = 1000.0
-num_episodes = 1000
+annealing_steps = 10000.0
+num_episodes = 10000
 pre_train_steps = 1000
 max_epLength = 50
-load_model = False
+load_model = True
 path = "testing/"
 h_size = 256
 tau = 0.001
+
+already_travelled = []
 
 
 class QPathFinding:
 
     def __init__(self, h_size):
-        self.scalarInput = tf.placeholder(shape=[None,1024], dtype=tf.float32)
-        self.imageIn = tf.reshape(self.scalarInput, shape=[-1, 32, 32, 1])
+        self.scalarInput = tf.placeholder(shape=[None,256], dtype=tf.float32)
+        self.imageIn = tf.reshape(self.scalarInput, shape=[-1, 16, 16, 1])
 
         self.conv1 = slim.conv2d(inputs = self.imageIn, num_outputs = 32, \
-                                 kernel_size = [8, 8], stride = [2, 2], \
+                                 kernel_size = 3, stride = 1, \
                                  padding = 'VALID', biases_initializer=None)
-
+        # K_s = 8, s = 1
         self.conv2 = slim.conv2d(inputs = self.conv1, num_outputs = 64, \
-                                 kernel_size = [5, 5], stride = [2, 2], \
+                                 kernel_size = 5, stride = 5, \
                                  padding = 'VALID', biases_initializer=None)
 
         self.conv3 = slim.conv2d(inputs = self.conv2, num_outputs = 64, \
-                                 kernel_size = [3, 3], stride = [2, 2], \
+                                 kernel_size = 1, stride = 1, \
                                  padding = 'VALID', biases_initializer=None)
 
-##        self.conv4 = tf.layers.conv2d(inputs = self.conv3, filters = h_size, \
-##                                 kernel_size = [1, 1], strides = [1, 1], \
+##        self.conv4 = slim.conv2d(inputs = self.conv3, num_outputs = 256, \
+##                                 kernel_size = 4, stride = 1, \
 ##                                 padding = 'VALID')
 
         self.streamAC, self.streamVC = tf.split(self.conv3, 2, 1)
@@ -76,7 +77,7 @@ class QPathFinding:
 
 
 class experience_buffer():
-    def __init__(self, buffer_size = 5000):
+    def __init__(self, buffer_size = 50000):
         self.buffer = []
         self.buffer_size = buffer_size
 
@@ -90,7 +91,7 @@ class experience_buffer():
 
 
 def process_state(states):
-    return np.reshape(states, [1024])
+    return np.reshape(states, [256])
 
 
 def updateTargetGraph(tfVars, tau):
@@ -107,9 +108,6 @@ def update_target(op_holder, sess):
         sess.run(op)
 
 
-already_travelled = []
-
-
 def get_row(idx, dim):
     return int(idx / dim)
 
@@ -117,26 +115,35 @@ def get_row(idx, dim):
 def get_col(idx, dim):
     return idx % dim
 
-def get_reward(start, end, moved, optimal_path):
+def get_reward(start, end, moved, optimal_path, neighbors):
     global already_travelled
     path, dim = optimal_path
     optimal_move = path[1]
     optimal_x = get_row(optimal_move, dim)
     optimal_y = get_col(optimal_move, dim)
 
+    result = 0
+
+    # If made the optimal move for
     if (optimal_x, optimal_y) == (start[0], start[1]):
-        return 10
+        result = 2
+
+    # Encourage being near farm plots
+    if "brown_shulker_box" in neighbors:
+        result += 0.5 * len([n for n in neighbors if n == "brown_shulker_box"])
+    else:
+        result -= 0.5 * len([n for n in neighbors if not n == "brown_shulker_box"])
 
     dist = len(path)-1
-    if dist < 2:
-        return 100
+    if dist < 2: # If within interaction distance
+        return result + 5
     result = -dist * 0.08
-    if moved == -1:
-        result -= 2
+    if moved == -1: # If made an invalid move
+        result -= 3
     else:
         result -= 0.04
-    if start in already_travelled:
-        result -= 0.25
+    if start in already_travelled: # If has already been to block
+        result -= 0.5
     else:
         already_travelled.append(start)
     return result

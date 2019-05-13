@@ -13,9 +13,9 @@ import pprint
 
 pathfinding_value = {"white_shulker_box": 0,
                      "brown_shulker_box": 1,
-                      "blue_shulker_box": 2,
-                                 "start": 3,
-                                  "dest": 4}
+                      "blue_shulker_box": 1,
+                                 "start": 30,
+                                  "dest": 40}
 
 
 def spawn_farm(f, n, m):
@@ -70,10 +70,24 @@ def move_agent(i, a, pos, f):
         x, z = pos[0], pos[1] + 1
     else:
         x, z = pos[0] - 1, pos[1]
-    if (x < 0 or x > 31 or z < 0 or z > 31 or f[x][z] in ["brown_shulker_box", "blue_shulker_box"]):
+    if (x < 0 or x > 15 or z < 0 or z > 15 or f[x][z] in ["brown_shulker_box", "blue_shulker_box"]):
         return -1, (x,z)
     a.sendCommand("tp {} 2 {}".format(x, z))
     return 1, (x,z)
+
+
+def get_neighbors(pos, f):
+    result = []
+    for x, z in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+        new_x = pos[0] + x
+        new_z = pos[1] + z
+        if not (new_x < 0 or new_x > 15 or new_z < 0 or new_z > 15):
+            result.append(f[new_x][new_z])
+    return result
+            
+            
+        
+    
 
 # <ServerQuitFromTimeUp timeLimitMs="10000"/>
 def run_mission():
@@ -129,7 +143,7 @@ def run_mission():
     my_mission_record = MalmoPython.MissionRecordSpec()
 
     # Create Farm
-    size = 32
+    size = 16 #32
     size += size % 2  # Make sure the size is even
     # 3D-array of the farm
     #   farm[0] = 2D-array color_shulker_box data
@@ -188,15 +202,15 @@ def run_mission():
     start = agent_spawn
     total_reward = 0
     ## --- PFNN
-
     if not os.path.exists(pfn.path):
         os.makedirs(pfn.path)
     ## Setup tensorflow session
     with tf.Session() as sess:
         sess.run(init)
-        if pfn.load_model == True:
+        if pfn.load_model:
             ckpt = tf.train.get_checkpoint_state(pfn.path)
             saver.restore(sess, ckpt.model_checkpoint_path)
+            print("\nLOADED EXISTING MODEL\n")
         for i in range(pfn.num_episodes):
             total_reward = 0
             episodeBuffer = pfn.experience_buffer()
@@ -231,9 +245,9 @@ def run_mission():
                     move_result = move_agent(a, agent_host, start, farm[0])
                     move_loc = move_result[1]
                     did_move = move_result[0]
-                    r = pfn.get_reward(move_loc, dest, did_move, optimal_path)
+                    r = pfn.get_reward(move_loc, dest, did_move, optimal_path, get_neighbors(move_loc, farm[0]))
                     #print(total_steps, r)
-                    if r == 100:
+                    if r >= 5:
                         d = True
                     total_steps += 1
                     episodeBuffer.add(np.reshape(np.array([s, a, r, s1, d]), [1, 5]))
@@ -248,19 +262,16 @@ def run_mission():
                             end_multiplier = -(trainBatch[:, 4] - 1)
                             doubleQ = Q2[range(pfn.batch_size), Q1]
                             targetQ = trainBatch[:,2] + (pfn.y*doubleQ*end_multiplier)
-                            try:
-                                _ = sess.run(mainQN.updateModel, \
-                                    feed_dict={mainQN.scalarInput:np.vstack(trainBatch[:,0]), \
-                                               mainQN.targetQ:targetQ, mainQN.actions:trainBatch[:,1]})
-                                pfn.update_target(targetOps, sess)
-                            except:
-                                pass
+                            _ = sess.run(mainQN.updateModel, \
+                                feed_dict={mainQN.scalarInput:np.vstack(trainBatch[:,0]), \
+                                           mainQN.targetQ:targetQ, mainQN.actions:trainBatch[:,1]})
+                            pfn.update_target(targetOps, sess)
                     rAll += r
                     total_reward += r
                     s = s1
 
-                    if d == True or total_reward < -2500:
-                        if total_reward < -2500:
+                    if d == True or total_reward < -2000:
+                        if total_reward < -2000:
                             print("LOST")
                         break
 
@@ -273,7 +284,7 @@ def run_mission():
             # -- PFNN
               
             pfn.reset_already_travelled()
-            print("\nMission ended")
+            print("Mission ended\n")
             # Mission has ended.
             time.sleep(1)
 

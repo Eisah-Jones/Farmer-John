@@ -1,0 +1,6 @@
+model_checkpoint_path: "model-epi-7.ckpt"
+all_model_checkpoint_paths: "model-epi-3.ckpt"
+all_model_checkpoint_paths: "model-epi-4.ckpt"
+all_model_checkpoint_paths: "model-epi-5.ckpt"
+all_model_checkpoint_paths: "model-epi-6.ckpt"
+all_model_checkpoint_paths: "model-epi-7.ckpt"
