@@ -36,20 +36,20 @@ class QPathFinding:
         self.imageIn = tf.reshape(self.scalarInput, shape=[-1, 16, 16, 1])
 
         self.conv1 = slim.conv2d(inputs = self.imageIn, num_outputs = 32, \
-                                 kernel_size = 3, stride = 1, \
-                                 padding = 'VALID', biases_initializer=None)
+                                 kernel_size = 2, stride = 1, \
+                                 padding = 'SAME', biases_initializer=None)
         # K_s = 8, s = 1
         self.conv2 = slim.conv2d(inputs = self.conv1, num_outputs = 64, \
-                                 kernel_size = 5, stride = 5, \
-                                 padding = 'VALID', biases_initializer=None)
+                                 kernel_size = 2, stride = 2, \
+                                 padding = 'SAME', biases_initializer=None)
 
-        self.conv3 = slim.conv2d(inputs = self.conv2, num_outputs = 64, \
-                                 kernel_size = 1, stride = 1, \
-                                 padding = 'VALID', biases_initializer=None)
+        self.conv3 = slim.conv2d(inputs = self.conv2, num_outputs = 16, \
+                                 kernel_size = 6, stride = 2, \
+                                 padding = 'SAME', biases_initializer=None)
 
 ##        self.conv4 = slim.conv2d(inputs = self.conv3, num_outputs = 256, \
 ##                                 kernel_size = 4, stride = 1, \
-##                                 padding = 'VALID')
+##                                 padding = 'SAME')
 
         self.streamAC, self.streamVC = tf.split(self.conv3, 2, 1)
         self.streamA = slim.flatten(self.streamAC)
@@ -126,18 +126,18 @@ def get_reward(start, end, moved, optimal_path, neighbors):
 
     # If made the optimal move for
     if (optimal_x, optimal_y) == (start[0], start[1]):
-        result = 2
+        result = 3
 
     # Encourage being near farm plots
-    if "brown_shulker_box" in neighbors:
-        result += 0.5 * len([n for n in neighbors if n == "brown_shulker_box"])
-    else:
-        result -= 0.5 * len([n for n in neighbors if not n == "brown_shulker_box"])
+    # if "brown_shulker_box" in neighbors:
+    #     result += 0.08 * len([n for n in neighbors if n == "brown_shulker_box"])
+    # else:
+    #     result -= 0.08 * len([n for n in neighbors if not n == "brown_shulker_box"])
 
     dist = len(path)-1
     if dist < 2: # If within interaction distance
         return result + 5
-    result = -dist * 0.08
+    result -= dist * 0.08
     if moved == -1: # If made an invalid move
         result -= 3
     else:

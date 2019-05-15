@@ -11,11 +11,11 @@ import tensorflow as tf
 from algorithms.dikjstra import get_path_dikjstra
 import pprint
 
-pathfinding_value = {"white_shulker_box": 0,
-                     "brown_shulker_box": 1,
-                      "blue_shulker_box": 1,
-                                 "start": 30,
-                                  "dest": 40}
+pathfinding_value = {"white_shulker_box": 1,
+                     "brown_shulker_box": 2,
+                      "blue_shulker_box": 2,
+                                 "start": 3,
+                                  "dest": 4}
 
 
 def spawn_farm(f, n, m):
@@ -196,11 +196,8 @@ def run_mission():
     myBuffer = pfn.experience_buffer()
     e = pfn.startE
     stepDrop = (pfn.startE - pfn.endE)/pfn.annealing_steps
-    jList = []
-    rList = []
     total_steps = 0
     start = agent_spawn
-    total_reward = 0
     ## --- PFNN
     if not os.path.exists(pfn.path):
         os.makedirs(pfn.path)
@@ -212,7 +209,6 @@ def run_mission():
             saver.restore(sess, ckpt.model_checkpoint_path)
             print("\nLOADED EXISTING MODEL\n")
         for i in range(pfn.num_episodes):
-            total_reward = 0
             episodeBuffer = pfn.experience_buffer()
             dest = list(random.choice(farmland))
             print(i, dest)
@@ -220,9 +216,7 @@ def run_mission():
             s = get_pathfinding_input(farm[0], start, dest)
             s = pfn.process_state(s)
             d = False
-            rAll = 0
-            j = 0
-
+            episode_steps = 0
             # Loop until mission ends:
             while world_state.is_mission_running:
                 ## -- PFNN
@@ -238,7 +232,7 @@ def run_mission():
                     s1 = get_pathfinding_input(farm[0], start, dest)
                     s1 = pfn.process_state(s1)
                     optimal_path = get_path_dikjstra(start, dest, s1)
-                    if np.random.rand(1) < e or total_steps < pfn.pre_train_steps:
+                    if np.random.rand(1) < e or (total_steps < pfn.pre_train_steps and not pfn.load_model):
                         a = np.random.randint(0, 4)
                     else:
                         a = sess.run(mainQN.predict, feed_dict={mainQN.scalarInput: [s]})[0]
@@ -266,20 +260,14 @@ def run_mission():
                                 feed_dict={mainQN.scalarInput:np.vstack(trainBatch[:,0]), \
                                            mainQN.targetQ:targetQ, mainQN.actions:trainBatch[:,1]})
                             pfn.update_target(targetOps, sess)
-                    rAll += r
-                    total_reward += r
                     s = s1
-
-                    if d == True or total_reward < -2000:
-                        if total_reward < -2000:
+                    episode_steps += 1
+                    if d or episode_steps > 200:
+                        if episode_steps > 200:
                             print("LOST")
                         break
 
                 myBuffer.add(episodeBuffer.buffer)
-                jList.append(j)
-                rList.append(rAll)
-                if i % 100 == 0:
-                    saver.save(sess, pfn.path+"model-att-"+str(i)+".ckpt")
             saver.save(sess, pfn.path+"model-epi-"+str(i)+".ckpt")
             # -- PFNN
               
