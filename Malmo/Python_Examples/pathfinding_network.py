@@ -13,7 +13,7 @@ tf.set_random_seed(1)
 
 ## Training parameters
 batch_size = 64
-update_freq = 4
+update_freq = 1
 y = 0.99
 startE = 1
 endE = 0.1

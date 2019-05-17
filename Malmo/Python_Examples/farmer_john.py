@@ -94,7 +94,7 @@ def get_neighbors(pos, f):
             
 
 def print_state(s):
-    for i in range(len(s)):
+    for i in range(len(s), -1, -1):
         if i%16 == 0:
             print("\n")
         if s[i] == 10:
@@ -156,6 +156,7 @@ def run_mission():
         print(agent_host.getUsage())
         exit(0)
 
+    agent_host.setObservationsPolicy( MalmoPython.ObservationsPolicy.LATEST_OBSERVATION_ONLY )
     # Create Mission
     my_mission = MalmoPython.MissionSpec(mission_xml, True)
     my_mission_record = MalmoPython.MissionRecordSpec()
@@ -248,10 +249,10 @@ def run_mission():
                 world_state = agent_host.getWorldState()
                 for error in world_state.errors:
                     print("Error:", error.text)
-                if len(world_state.observations) > 0:
+                if not len(world_state.observations) == 0:
                     # Get new world state, reward, d
                     #print_state(s)
-                    msg = world_state.observations[-1].text
+                    msg = world_state.observations[0].text
                     ob = json.loads(msg)
                     start = [int(ob['XPos']), int(ob['ZPos'])]
                     #print("\n", get_pathfinding_input(farm[0], start, dest, prev_pos), "\n")
@@ -307,7 +308,7 @@ def run_mission():
                         print("\t  {} random steps".format(random_steps))
                         break
 
-                    myBuffer.add(episodeBuffer.buffer)
+                myBuffer.add(episodeBuffer.buffer)
             saver.save(sess, pfn.path+"model-epi-"+str(i)+".ckpt")
             # -- PFNN
             pfn.reset_already_travelled()
