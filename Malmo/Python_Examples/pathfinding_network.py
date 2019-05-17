@@ -19,10 +19,10 @@ startE = 1
 endE = 0.1
 annealing_steps = 10000.0
 num_episodes = 10000
-pre_train_steps = 1000
+pre_train_steps = 10000
 load_model = False
 path = "testing/"
-h_size = 512
+h_size = 256
 tau = 0.001
 
 already_travelled = []
@@ -50,7 +50,7 @@ class QPathFinding:
 ##                                 kernel_size = 4, stride = 1, \
 ##                                 padding = 'SAME')
 
-        self.streamAC, self.streamVC = tf.split(self.conv3, 2)
+        self.streamAC, self.streamVC = tf.split(self.conv3, 2, 1)
         self.streamA = slim.flatten(self.streamAC)
         self.streamV = slim.flatten(self.streamVC)
         xavier_init = tf.contrib.layers.xavier_initializer()
