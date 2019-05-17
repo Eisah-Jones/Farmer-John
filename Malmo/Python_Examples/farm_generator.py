@@ -29,27 +29,51 @@ plot4 = [["water",   "farmland",   "farmland",  "stone",   "farmland",   "farmla
 shulker_dict = {"farmland": "brown_shulker_box",
                 "water" : "blue_shulker_box",
                 "planks": "white_shulker_box",
-                "stone": "white_shulker_box"}
+                "stone": "white_shulker_box",
+                "grass": "white_shulker_box"}
 
+
+def get_static_plot():
+    bot = []
+    top = []
+    for i in range(16):
+        tempBot = []
+        tempTop = []
+        for j in range(16):
+            if (i in [4, 6, 10, 12] and j in [4, 6, 10, 12]) or \
+               (i in [5, 11] and j in [4, 6, 10, 12]) or \
+               (j in [5, 11] and i in [4, 6, 10, 12]) :
+                tempTop.append("farmland")
+                tempBot.append(shulker_dict["farmland"])
+            elif i in [5, 11] and j in [5, 11]:
+                tempTop.append("water")
+                tempBot.append(shulker_dict["water"])
+            else:
+                tempTop.append("grass")
+                tempBot.append(shulker_dict["grass"])
+        bot.append(tempBot)
+        top.append(tempTop)
+    return [bot, top]
+            
 
 
 def spawn_plots(f, n):
 
-    plots = [plot4, plot1, plot3, plot2]
+    plots = [plot1, plot3, plot2]
     availableSpots = []
     availableAll = []
     for plot in plots:
         temp = []
-        for i in range(2, n-2):
-            for j in range(2, n-2):
+        for i in range(1, n-1):
+            for j in range(1, n-1):
                 if(not (i, j) in availableAll):
                     availableAll.append((i, j))
-                if (j + len(plot[0]) < n-2 and i + len(plot) < n-2):
+                if (j + len(plot[0]) < n-1 and i + len(plot) < n-1):
                     temp.append((i, j))
         availableSpots.append(temp)
 
     spawns = []
-    for plot, available, probs in zip(plots, availableSpots, [0.02, 0.1, 0.5, 1]):
+    for plot, available, probs in zip(plots, availableSpots, [0.1, 0.5, 0.5]):
         temp = []
         for a in available:
             if(a in availableAll and random.random() < probs):
@@ -94,6 +118,6 @@ def initialize_farm(n):
 def generate_farm(size):
     ''' Generate a list representation of the farm
     '''
-    farm = initialize_farm(size)
-    farm = spawn_plots(farm, size)
-    return farm
+##    farm = initialize_farm(size)
+##    farm = spawn_plots(farm, size)
+    return get_static_plot()

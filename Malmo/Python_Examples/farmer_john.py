@@ -14,8 +14,14 @@ import pprint
 pathfinding_value = {"white_shulker_box": 1,
                      "brown_shulker_box": 2,
                       "blue_shulker_box": 2,
-                                 "start": 3,
-                                  "dest": 4}
+                                 "start": 10,
+                                  "dest": 15,
+                                  "prev": 5}
+
+pf_action = {0: "Forward",
+             1: "Left",
+             2: "Right",
+             3: "Back"}
 
 
 def spawn_farm(f, n, m):
@@ -47,16 +53,17 @@ def get_agent_pos(f, n):
     return pos
 
 
-def get_pathfinding_input(f, s, d):
+def get_pathfinding_input(f, s, d, p):
     result = []
     for r in f:
         temp = []
         for c in r:
             temp.append(pathfinding_value[c])
         result.append(temp)
-    result[s[0]][s[1]] = pathfinding_value["start"]
     result[d[0]][d[1]] = pathfinding_value["dest"]
-    #print("\n", result)
+    if not p is None:
+        result[p[0]][p[1]] = pathfinding_value["prev"]
+    result[s[0]][s[1]] = pathfinding_value["start"]
     return result
 
 
@@ -111,7 +118,7 @@ def run_mission():
               <AgentSection mode="Survival">
                 <Name>FarmerBot</Name>
                 <AgentStart>
-                  <Placement yaw="90"/>
+                  <Placement yaw="-90"/>
                   <Inventory>
                     <InventoryObject slot="0" type="wheat_seeds" quantity="64"/>
                     <InventoryObject slot="1" type="carrot" quantity="64"/>
@@ -198,9 +205,11 @@ def run_mission():
     stepDrop = (pfn.startE - pfn.endE)/pfn.annealing_steps
     total_steps = 0
     start = agent_spawn
+    prev_pos = None
     ## --- PFNN
     if not os.path.exists(pfn.path):
         os.makedirs(pfn.path)
+    print()
     ## Setup tensorflow session
     with tf.Session() as sess:
         sess.run(init)
@@ -209,16 +218,20 @@ def run_mission():
             saver.restore(sess, ckpt.model_checkpoint_path)
             print("\nLOADED EXISTING MODEL\n")
         for i in range(pfn.num_episodes):
+            prev_pos = None
             episodeBuffer = pfn.experience_buffer()
             dest = list(random.choice(farmland))
-            print(i, dest)
             my_mission.drawBlock(dest[0], 4, dest[1], "red_shulker_box")
-            s = get_pathfinding_input(farm[0], start, dest)
+            s = get_pathfinding_input(farm[0], start, dest, prev_pos)
             s = pfn.process_state(s)
             d = False
             episode_steps = 0
+            quickest_path = len(get_path_dikjstra(start, dest, s)[0])-1
+            random_steps = 0
+            print("Mission {} \n\t{} --> {}\n\tOptimal Path: {}".format(i, list(start), dest, quickest_path))
             # Loop until mission ends:
             while world_state.is_mission_running:
+                time.sleep(0.1)
                 ## -- PFNN
                 # Get agent action
                 world_state = agent_host.getWorldState()
@@ -229,17 +242,26 @@ def run_mission():
                     msg = world_state.observations[-1].text
                     ob = json.loads(msg)
                     start = [int(ob['XPos']), int(ob['ZPos'])]
-                    s1 = get_pathfinding_input(farm[0], start, dest)
+                    #print("\n", get_pathfinding_input(farm[0], start, dest, prev_pos), "\n")
+                    s1 = get_pathfinding_input(farm[0], start, dest, prev_pos)
+                    prev_pos = start
                     s1 = pfn.process_state(s1)
+                    #print_state(s1)
                     optimal_path = get_path_dikjstra(start, dest, s1)
                     if np.random.rand(1) < e or (total_steps < pfn.pre_train_steps and not pfn.load_model):
+                        random_steps += 1
                         a = np.random.randint(0, 4)
                     else:
                         a = sess.run(mainQN.predict, feed_dict={mainQN.scalarInput: [s]})[0]
+                        #print("  NN move:", pf_action[a])
                     move_result = move_agent(a, agent_host, start, farm[0])
                     move_loc = move_result[1]
                     did_move = move_result[0]
-                    r = pfn.get_reward(move_loc, dest, did_move, optimal_path, get_neighbors(move_loc, farm[0]))
+                    if not did_move == -1:
+                        new_dist = len(get_path_dikjstra(move_loc, dest, s1)[0])
+                    else:
+                        new_dist = None
+                    r = pfn.get_reward(move_loc, dest, did_move, optimal_path, get_neighbors(move_loc, farm[0]), new_dist)
                     #print(total_steps, r)
                     if r >= 5:
                         d = True
@@ -264,18 +286,23 @@ def run_mission():
                     episode_steps += 1
                     if d or episode_steps > 200:
                         if episode_steps > 200:
-                            print("LOST")
+                            print("\tAgent Lost...")
+                        elif episode_steps == 1 :
+                            print("\tSuccessful Navigation in {} step!".format(episode_steps))
+                        else:
+                            print("\tSuccessful Navigation in {} steps!".format(episode_steps))
+                        print("\t  {} random steps".format(random_steps))
                         break
 
                 myBuffer.add(episodeBuffer.buffer)
             saver.save(sess, pfn.path+"model-epi-"+str(i)+".ckpt")
             # -- PFNN
-              
             pfn.reset_already_travelled()
             print("Mission ended\n")
             # Mission has ended.
-            time.sleep(1)
+            time.sleep(0.5)
 
 
 if __name__ == "__main__":
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
     run_mission()
