@@ -19,8 +19,8 @@ startE = 1
 endE = 0.1
 annealing_steps = 10000.0
 num_episodes = 10000
-pre_train_steps = 10000
-load_model = False
+pre_train_steps = 1000
+load_model = True
 path = "testing/"
 h_size = 256
 tau = 0.001
@@ -34,23 +34,23 @@ class QPathFinding:
         self.scalarInput = tf.placeholder(shape=[None,256], dtype=tf.float32)
         self.imageIn = tf.reshape(self.scalarInput, shape=[-1, 16, 16, 1])
 
-        self.conv1 = slim.conv2d(inputs = self.imageIn, num_outputs = 32, \
-                                 kernel_size = 5, stride = 1, \
+        self.conv1 = slim.conv2d(inputs = self.imageIn, num_outputs = 16, \
+                                 kernel_size = [2, 2], stride = [1, 1], \
                                  padding = 'VALID', biases_initializer=None)
         
-        self.conv2 = slim.conv2d(inputs = self.conv1, num_outputs = 64, \
-                                 kernel_size = 2, stride = 2, \
+        self.conv2 = slim.conv2d(inputs = self.conv1, num_outputs = 32, \
+                                 kernel_size = [3, 3], stride = [2, 2], \
                                  padding = 'VALID', biases_initializer=None)
 
-        self.conv3 = slim.conv2d(inputs = self.conv2, num_outputs = 16, \
-                                 kernel_size = 3, stride = 1, \
+        self.conv3 = slim.conv2d(inputs = self.conv2, num_outputs = 64, \
+                                 kernel_size = [2, 2], stride = [1, 1], \
                                  padding = 'VALID', biases_initializer=None)
 
-##        self.conv4 = slim.conv2d(inputs = self.conv3, num_outputs = 256, \
-##                                 kernel_size = 4, stride = 1, \
-##                                 padding = 'SAME')
+        self.conv4 = slim.conv2d(inputs = self.conv3, num_outputs = h_size/4, \
+                                 kernel_size = [3, 3], stride = [3, 3], \
+                                 padding = 'VALID')
 
-        self.streamAC, self.streamVC = tf.split(self.conv3, 2, 1)
+        self.streamAC, self.streamVC = tf.split(self.conv4, 2, 1)
         self.streamA = slim.flatten(self.streamAC)
         self.streamV = slim.flatten(self.streamVC)
         xavier_init = tf.contrib.layers.xavier_initializer()
@@ -122,7 +122,7 @@ def get_reward(start, end, moved, optimal_path, neighbors, new_dist):
         return 5
     
     if new_dist is None:
-        return -2
+        return 0
     elif len(optimal_path[0]) == new_dist:
         return 0
     elif len(optimal_path[0]) < new_dist:

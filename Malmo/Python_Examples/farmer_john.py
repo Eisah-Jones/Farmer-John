@@ -92,7 +92,18 @@ def get_neighbors(pos, f):
             result.append(f[new_x][new_z])
     return result
             
-            
+
+def print_state(s):
+    for i in range(len(s)):
+        if i%16 == 0:
+            print("\n")
+        if s[i] == 10:
+            print(".", end = " ")
+        elif s[i] == 15:
+            print('X', end = " ")
+        else:
+            print(s[i], end = " ")
+    print("\n")
         
     
 
@@ -160,7 +171,7 @@ def run_mission():
     agent_spawn = get_agent_pos(farm, size)
     my_mission.startAt(agent_spawn[0], 4, agent_spawn[1])
 
-    # Actual plots where crops are planted
+    # Actual plots where crops are planted and walkable area
     farmland = []
     for r in range(size):
         for c in range(size):
@@ -239,6 +250,7 @@ def run_mission():
                     print("Error:", error.text)
                 if len(world_state.observations) > 0:
                     # Get new world state, reward, d
+                    #print_state(s)
                     msg = world_state.observations[-1].text
                     ob = json.loads(msg)
                     start = [int(ob['XPos']), int(ob['ZPos'])]
@@ -246,7 +258,6 @@ def run_mission():
                     s1 = get_pathfinding_input(farm[0], start, dest, prev_pos)
                     prev_pos = start
                     s1 = pfn.process_state(s1)
-                    #print_state(s1)
                     optimal_path = get_path_dikjstra(start, dest, s1)
                     if np.random.rand(1) < e or (total_steps < pfn.pre_train_steps and not pfn.load_model):
                         random_steps += 1
@@ -296,7 +307,7 @@ def run_mission():
                         print("\t  {} random steps".format(random_steps))
                         break
 
-                myBuffer.add(episodeBuffer.buffer)
+                    myBuffer.add(episodeBuffer.buffer)
             saver.save(sess, pfn.path+"model-epi-"+str(i)+".ckpt")
             # -- PFNN
             pfn.reset_already_travelled()
