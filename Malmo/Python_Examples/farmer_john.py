@@ -61,8 +61,8 @@ def get_pathfinding_input(f, s, d, p):
             temp.append(pathfinding_value[c])
         result.append(temp)
     result[d[0]][d[1]] = pathfinding_value["dest"]
-    if not p is None:
-        result[p[0]][p[1]] = pathfinding_value["prev"]
+##    if not p is None:
+##        result[p[0]][p[1]] = pathfinding_value["prev"]
     result[s[0]][s[1]] = pathfinding_value["start"]
     return result
 
