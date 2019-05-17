@@ -116,6 +116,11 @@ def get_col(idx, dim):
 
 def get_reward(start, end, moved, optimal_path, neighbors, new_dist):
 
+    dist = len(optimal_path[0])-1
+    
+    if dist < 2: # If within interaction distance
+        return 5
+    
     if new_dist is None:
         return -2
     elif len(optimal_path[0]) == new_dist:

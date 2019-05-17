@@ -268,6 +268,8 @@ def run_mission():
                     total_steps += 1
                     episodeBuffer.add(np.reshape(np.array([s, a, r, s1, d]), [1, 5]))
                     if total_steps > pfn.pre_train_steps:
+                        if total_steps == pfn.pre_train_steps + 1:
+                            print("\nBEGIN TRAINING\n")
                         if e > pfn.endE:
                             e -= stepDrop
 
