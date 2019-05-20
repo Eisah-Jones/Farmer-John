@@ -104,6 +104,21 @@ def print_state(s):
         else:
             print(s[i], end = " ")
     print("\n")
+
+
+
+def create_agent_movement_record():
+    f = open("data/performance.csv", "w")
+    f.write("epNum,stepNum,posX,posZ,destX,destZ,action,reward\n")
+    f.close()
+
+
+
+def record_agent_movement(epNum, stepNum, pos, dest, action, reward):
+    # record episode num, step num, pos, action, reward
+    f = open("data/performance.csv", "a")
+    f.write("{},{},{},{},{},{},{},{}\n".format(epNum,stepNum,pos[0],pos[1],dest[0],dest[1],action,reward))
+    f.close()
         
     
 
@@ -174,10 +189,14 @@ def run_mission():
 
     # Actual plots where crops are planted and walkable area
     farmland = []
+    walkable = []
     for r in range(size):
         for c in range(size):
             if farm[0][r][c] == "brown_shulker_box":
                 farmland.append((r, c))
+            elif farm[0][r][c] == "white_shulker_box":
+                walkable.append((r, c))
+    
 
     # Attempt to start a mission:
     max_retries = 3
@@ -218,6 +237,7 @@ def run_mission():
     total_steps = 0
     start = agent_spawn
     prev_pos = None
+    create_agent_movement_record()
     ## --- PFNN
     if not os.path.exists(pfn.path):
         os.makedirs(pfn.path)
@@ -232,14 +252,18 @@ def run_mission():
         for i in range(pfn.num_episodes):
             prev_pos = None
             episodeBuffer = pfn.experience_buffer()
-            dest = list(random.choice(farmland))
-            my_mission.drawBlock(dest[0], 4, dest[1], "red_shulker_box")
+            if not i == 1:
+                start = list(walkable[np.random.randint(0, len(walkable))])
+                agent_host.sendCommand("tp {} 2 {}".format(start[0], start[1]))
+            dest = list(farmland[np.random.randint(0, len(farmland))])
             s = get_pathfinding_input(farm[0], start, dest, prev_pos)
             s = pfn.process_state(s)
             d = False
+            a = None
             episode_steps = 0
             quickest_path = len(get_path_dikjstra(start, dest, s)[0])-1
             random_steps = 0
+            record_agent_movement(i, episode_steps, start, dest, a, 0)
             print("Mission {} \n\t{} --> {}\n\tOptimal Path: {}".format(i, list(start), dest, quickest_path))
             # Loop until mission ends:
             while world_state.is_mission_running:
@@ -298,6 +322,7 @@ def run_mission():
                             pfn.update_target(targetOps, sess)
                     s = s1
                     episode_steps += 1
+                    record_agent_movement(i, episode_steps, move_loc, dest, a, r)
                     if d or episode_steps > 200:
                         if episode_steps > 200:
                             print("\tAgent Lost...")
