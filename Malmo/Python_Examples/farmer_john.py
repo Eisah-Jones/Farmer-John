@@ -283,7 +283,7 @@ def run_mission():
                     start = [int(ob['XPos']), int(ob['ZPos'])]
                     #print("\n", get_pathfinding_input(farm[0], start, dest, prev_pos), "\n")
                     prev_pos = start
-                    optimal_path = get_path_dikjstra(start, dest, s1)
+                    optimal_path = get_path_dikjstra(start, dest, s)
                     if np.random.rand(1) < e or (total_steps < pfn.pre_train_steps and not pfn.load_model):
                         random_steps += 1
                         a = np.random.randint(0, 4)
