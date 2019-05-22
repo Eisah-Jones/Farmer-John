@@ -293,7 +293,7 @@ def run_mission():
                         random_steps += 1
                         a = np.random.randint(0, 4)
                     else:
-                        a = sess.run(mainQN.predict, feed_dict={mainQN.scalarInput: [s]})[0]
+                        a = sess.run(mainQN.predict, feed_dict={mainQN.scalarInput: [s1]})[0]
                         #print("  NN move:", pf_action[a])
                     move_result = move_agent(a, agent_host, start, farm[0])
                     move_loc = move_result[1]
