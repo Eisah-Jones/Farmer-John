@@ -53,7 +53,7 @@ def get_agent_pos(f, n):
     return pos
 
 
-def get_pathfinding_input(f, s, d, p):
+def get_pathfinding_input(f, s, d):
     result = []
     for r in f:
         temp = []
@@ -61,8 +61,6 @@ def get_pathfinding_input(f, s, d, p):
             temp.append(pathfinding_value[c])
         result.append(temp)
     result[d[0]][d[1]] = pathfinding_value["dest"]
-##    if not p is None:
-##        result[p[0]][p[1]] = pathfinding_value["prev"]
     result[s[0]][s[1]] = pathfinding_value["start"]
     return result
 
@@ -241,7 +239,6 @@ def run_mission():
     stepDrop = (pfn.startE - pfn.endE)/pfn.annealing_steps
     total_steps = 0
     start = agent_spawn
-    prev_pos = None
     create_agent_movement_record()
     ## --- PFNN
     if not os.path.exists(pfn.path):
@@ -255,14 +252,14 @@ def run_mission():
             saver.restore(sess, ckpt.model_checkpoint_path)
             print("\nLOADED EXISTING MODEL\n")
         for i in range(pfn.num_episodes):
-            prev_pos = None
             episodeBuffer = pfn.experience_buffer()
             if not i == 1:
                 start = list(walkable[np.random.randint(0, len(walkable))])
                 agent_host.sendCommand("tp {} 2 {}".format(start[0], start[1]))
             dest = list(farmland[np.random.randint(0, len(farmland))])
-            s = get_pathfinding_input(farm[0], start, dest, prev_pos)
+            s = get_pathfinding_input(farm[0], start, dest)
             s = pfn.process_state(s)
+            s1 = None
             d = False
             a = None
             episode_steps = 0
@@ -285,23 +282,24 @@ def run_mission():
                     ob = json.loads(msg)
                     start = [int(ob['XPos']), int(ob['ZPos'])]
                     #print("\n", get_pathfinding_input(farm[0], start, dest, prev_pos), "\n")
-                    s1 = get_pathfinding_input(farm[0], start, dest, prev_pos)
                     prev_pos = start
-                    s1 = pfn.process_state(s1)
                     optimal_path = get_path_dikjstra(start, dest, s1)
                     if np.random.rand(1) < e or (total_steps < pfn.pre_train_steps and not pfn.load_model):
                         random_steps += 1
                         a = np.random.randint(0, 4)
                     else:
-                        a = sess.run(mainQN.predict, feed_dict={mainQN.scalarInput: [s1]})[0]
+                        a = sess.run(mainQN.predict, feed_dict={mainQN.scalarInput: [s]})[0]
                         #print("  NN move:", pf_action[a])
                     move_result = move_agent(a, agent_host, start, farm[0])
                     move_loc = move_result[1]
                     did_move = move_result[0]
                     if did_move == 1:
+                        s1 = get_pathfinding_input(farm[0], move_loc, dest)
+                        s1 = pfn.process_state(s1)
                         new_dist = len(get_path_dikjstra(move_loc, dest, s1)[0])
                     else:
-                        new_dist = len(get_path_dikjstra(move_loc, start, s1)[0])
+                        s1 = s
+                        new_dist = len(get_path_dikjstra(start, dest, s1)[0])
                     r = pfn.get_reward(move_loc, dest, did_move, optimal_path, get_neighbors(move_loc, farm[0]), new_dist)
                     #print(total_steps, r)
                     if r >= 5:
