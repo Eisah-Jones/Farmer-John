@@ -94,7 +94,7 @@ def get_neighbors(pos, f):
             
 
 def print_state(s):
-    for i in range(len(s), -1, -1):
+    for i in range(len(s)):
         if i%16 == 0:
             print("\n")
         if s[i] == 10:
@@ -109,15 +109,15 @@ def print_state(s):
 
 def create_agent_movement_record():
     f = open("data/performance.csv", "w")
-    f.write("epNum,stepNum,posX,posZ,destX,destZ,action,reward\n")
+    f.write("epNum,stepNum,posX,posZ,destX,destZ,action,reward,success\n")
     f.close()
 
 
 
-def record_agent_movement(epNum, stepNum, pos, dest, action, reward):
+def record_agent_movement(epNum, stepNum, pos, dest, action, reward, success):
     # record episode num, step num, pos, action, reward
     f = open("data/performance.csv", "a")
-    f.write("{},{},{},{},{},{},{},{}\n".format(epNum,stepNum,pos[0],pos[1],dest[0],dest[1],action,reward))
+    f.write("{},{},{},{},{},{},{},{},{}\n".format(epNum,stepNum,pos[0],pos[1],dest[0],dest[1],action,reward,success))
     f.close()
         
     
@@ -131,6 +131,10 @@ def run_mission():
               <About>
                 <Summary>Setup Farm</Summary>
               </About>
+
+		   <ModSettings>
+		      <MsPerTick>4</MsPerTick>
+		   </ModSettings>
 
               <ServerSection>
                 <ServerHandlers>
@@ -196,6 +200,7 @@ def run_mission():
                 farmland.append((r, c))
             elif farm[0][r][c] == "white_shulker_box":
                 walkable.append((r, c))
+    #farmland = [(11, 12), (11, 4), (12, 4), (12,12), (12, 11), (11, 10), (12, 5), (12, 10), (12, 6)]
     
 
     # Attempt to start a mission:
@@ -263,11 +268,11 @@ def run_mission():
             episode_steps = 0
             quickest_path = len(get_path_dikjstra(start, dest, s)[0])-1
             random_steps = 0
-            record_agent_movement(i, episode_steps, start, dest, a, 0)
+            record_agent_movement(i, episode_steps, start, dest, a, 0, 0)
             print("Mission {} \n\t{} --> {}\n\tOptimal Path: {}".format(i, list(start), dest, quickest_path))
             # Loop until mission ends:
             while world_state.is_mission_running:
-                time.sleep(0.1)
+                time.sleep(0.008)
                 ## -- PFNN
                 # Get agent action
                 world_state = agent_host.getWorldState()
@@ -293,10 +298,10 @@ def run_mission():
                     move_result = move_agent(a, agent_host, start, farm[0])
                     move_loc = move_result[1]
                     did_move = move_result[0]
-                    if not did_move == -1:
+                    if did_move == 1:
                         new_dist = len(get_path_dikjstra(move_loc, dest, s1)[0])
                     else:
-                        new_dist = None
+                        new_dist = len(get_path_dikjstra(move_loc, start, s1)[0])
                     r = pfn.get_reward(move_loc, dest, did_move, optimal_path, get_neighbors(move_loc, farm[0]), new_dist)
                     #print(total_steps, r)
                     if r >= 5:
@@ -322,7 +327,8 @@ def run_mission():
                             pfn.update_target(targetOps, sess)
                     s = s1
                     episode_steps += 1
-                    record_agent_movement(i, episode_steps, move_loc, dest, a, r)
+                    record_s = 1 if d else 0
+                    record_agent_movement(i, episode_steps, move_loc, dest, a, r, record_s)
                     if d or episode_steps > 200:
                         if episode_steps > 200:
                             print("\tAgent Lost...")

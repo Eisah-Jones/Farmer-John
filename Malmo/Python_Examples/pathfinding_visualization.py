@@ -10,12 +10,19 @@ from cv2 import VideoWriter, VideoWriter_fourcc
 from PIL import Image
 
 
-def animate_episode_movement(df, epNum):
-    # Creates animation based off movement for a certain episode
-    episode_steps = df.loc[df["epNum"] == epNum]
-    posX_steps = episode_steps["posX"].values
-    posZ_steps = episode_steps["posZ"].values
-    dest = (episode_steps.iloc[0]["destX"], episode_steps.iloc[0]["destZ"])
+
+def ex_main(df):
+    pass
+    
+
+
+def write_movement_frame(df, v):
+    ''' Writes movement frame for video
+    '''
+    posX_step = df["posX"].values[0]
+    posZ_step = df["posZ"].values[0]
+    dest = (df["destX"].values[0], df["destZ"].values[0])
+    
     pos_values = dict()
     # Fill in empty values
     for i in range(-1, 17):
@@ -23,15 +30,6 @@ def animate_episode_movement(df, epNum):
             if not (i, j) in pos_values.keys():
                 pos_values[(i, j)] = 0
 
-    width = 675
-    height = 566
-    FPS = 24
-    seconds = 10
-    fourcc = VideoWriter_fourcc('m', 'p', '4', 'v')
-    video = VideoWriter('data/move.mov', fourcc, float(FPS), (width, height))
-
-    frameNum = 0
-    dfNum = 0
     df_pos = dict()
     x, z, v = [], [], []
     edf = pd.DataFrame(columns=['x', 'z', 'v'])
@@ -149,11 +147,10 @@ def animate_dest_movement(df, dest, fname, reset_ep = False):
     video = None
 
 
-def plot_episode_movement(df, epNum):
-    episode_steps = df.loc[df["epNum"] == epNum]
-    posX_steps = episode_steps["posX"].values
-    posZ_steps = episode_steps["posZ"].values
-    dest = (episode_steps.iloc[0]["destX"], episode_steps.iloc[0]["destZ"])
+def plot_movement_frame(df, pathName):
+    posX_steps = df["posX"].values
+    posZ_steps = df["posZ"].values
+    dest = (df.iloc[0]["destX"], df.iloc[0]["destZ"])
     pos_values = dict()
     # Fill in empty values
     for i in range(-1, 17):
@@ -163,7 +160,6 @@ def plot_episode_movement(df, epNum):
 
     for x, z in zip(posX_steps, posZ_steps):
         pos_values[(x, z)] += 1
-            
             
     x, z, v = [], [], []
     edf = pd.DataFrame(columns=['x', 'z', 'v'])
@@ -177,9 +173,9 @@ def plot_episode_movement(df, epNum):
     plt.yticks([x for x in range(16)])
     plt.colorbar(mappable = s)
     plt.tight_layout()
-    plt.show()
-    
-
+    savePath = "{}/{}_{}.png".format(pathName, dest[0], dest[1])
+    plt.savefig(savePath)
+    return savePath
 
 
 def plot_dest_movement(df, dest):
@@ -225,44 +221,68 @@ def plot_dest_movement(df, dest):
     plt.close()
 
 
-def distance(x1, x2, y1, y2):
-    return math.sqrt((x2-x1)**2 + (y2-y1)**2)
+def add_to_dict(d, k, v):
+    ''' Adds value to a dict
+        Wrap value v in data type it will be joining
+    '''
+    if type(v) is set:
+        if not k in d.keys():
+            d[k] = v
+        else:
+            d[k] = d[k].union(v)
+        return d
+    if not k in d.keys():
+        d[k] = v
+    else:
+        d[k] += v
+    return d
+
+
+def graph_success_by_dest(df):
+    d = df[['epNum', 'destX', 'destZ', 'success']]
+    visited_dests = []
+    for dest in zip(d['destX'].values, d['destZ'].values):
+        if not dest in visited_dests:
+            visited_dests.append(dest)
+            g = d.groupby(['destX', 'destZ']).get_group(dest).groupby('epNum')
+            print(g.groups.keys())
+            x = []
+            y = []
+            for k in g.groups.keys():
+                pass
+                
+            #successes = g['success'].value_counts()
+            #print(dest, successes[1]/(successes[0] + successes[1]))
 
 
 def get_best_dest(df):
-    solves = dict()
-    result = None
-    max_solves = -1
+    solves, occur = dict(), dict()
     for idx, row in df.iterrows():
-        pX = row['posX']
-        pZ = row['posZ']
-        dX = row['destX']
-        dZ = row['destZ']
-        if distance(pX, dX, pZ, dZ) <= 1 and (pX == dX or pZ == dZ):
+        dest = (row['destX'], row['destZ'])
+        s = row['success']
+        epNum = row['epNum']
+        occur = add_to_dict(occur, dest, {epNum})
+        if s == 1:
+            solves = add_to_dict(solves, dest, 1)
 
-            if (pX in [4, 6, 10, 12] and pZ in [4, 6, 10, 12]) or \
-               (pX in [5, 11] and pZ in [4, 6, 10, 12]) or \
-               (pZ in [5, 11] and pX in [4, 6, 10, 12]) :
-                continue
+    for k, v in occur.items():
+        if not k in solves.keys():
+            occur[k] = 0.0
+        else:
+            occur[k] = float(solves[k])/len(v)
 
-            
-            if not (dX, dZ) in solves.keys():
-                solves[(dX, dZ)] = 0
-            else:
-                solves[(dX, dZ)] += 1
-                
-            if solves[(dX, dZ)] > max_solves:
-                result = (dX, dZ)
-                max_solves = solves[(dX, dZ)]
-    print(result, max_solves)
-    return result
-        
+    return occur
 
-
+def print_dict_sorted(d):
+    dest = [(v, k) for k, v in d.items()]
+    dest.sort(reverse=True)
+    for v, k in dest:
+        print('{}: {}'.format(k, v))
 
 if __name__ == "__main__":
     data = pd.read_csv("data/movement2.csv")
     t = time.time()
-    dest = get_best_dest(data)
-    animate_dest_movement(data, dest, "dest_{}_{}".format(dest[0], dest[1]))
-    print(time.time() - t)
+    graph_success_by_dest(data)
+    #dest = get_best_dest(data)
+    #animate_dest_movement(data, dest, "dest_{}_{}".format(dest[0], dest[1]))
+    #print_dict_sorted(dest)

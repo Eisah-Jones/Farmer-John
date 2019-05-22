@@ -17,9 +17,9 @@ update_freq = 1
 y = 0.99
 startE = 1
 endE = 0.1
-annealing_steps = 10000.0
+annealing_steps = 100000.0
 num_episodes = 10000
-pre_train_steps = 1000
+pre_train_steps = 2000
 load_model = True
 path = "testing/"
 h_size = 256
@@ -137,27 +137,33 @@ def get_reward(start, end, moved, optimal_path, neighbors, new_dist):
     optimal_y = get_col(optimal_move, dim)
 
     result = 0
+    if len(optimal_path[0]) == new_dist:
+        result -= 1
+    elif len(optimal_path[0]) < new_dist:
+        result -= 2
+    else:
+        result += 2
 
     # If made the optimal move for
-    if (optimal_x, optimal_y) == (start[0], start[1]):
-        result = 3
+    #if (optimal_x, optimal_y) == (start[0], start[1]):
+    #    result = 3
 
     # Encourage being near farm plots
-    # if "brown_shulker_box" in neighbors:
-    #     result += 0.08 * len([n for n in neighbors if n == "brown_shulker_box"])
-    # else:
-    #     result -= 0.08 * len([n for n in neighbors if not n == "brown_shulker_box"])
+    if "brown_shulker_box" in neighbors:
+        result += 0.08 * len([n for n in neighbors if n == "brown_shulker_box"])
+    else:
+        result -= 0.08 * len([n for n in neighbors if not n == "brown_shulker_box"])
 
     dist = len(path)-1
     if dist < 2: # If within interaction distance
         return result + 20
-    result -= dist * 0.08
+    result -= dist * 0.04
     if moved == -1: # If made an invalid move
-        result -= 1
+        result -= 2
     else:
         result -= 0.04
     if start in already_travelled: # If has already been to block
-        result -= 0.5
+        result -= 0.75
     else:
         already_travelled.append(start)
     return result
