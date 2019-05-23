@@ -121,7 +121,7 @@ def record_agent_movement(epNum, stepNum, pos, dest, action, reward, success):
     
 
 # <ServerQuitFromTimeUp timeLimitMs="10000"/>
-def run_mission():
+def train_agent():
     random.seed(time.time())
     mission_xml = '''<?xml version="1.0" encoding="UTF-8" ?>
             <Mission xmlns="http://ProjectMalmo.microsoft.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -131,10 +131,17 @@ def run_mission():
               </About>
 
 		   <ModSettings>
-		      <MsPerTick>4</MsPerTick>
+		      <MsPerTick>2</MsPerTick>
 		   </ModSettings>
 
               <ServerSection>
+                <ServerInitialConditions>
+                  <Time>
+                    <StartTime>0</StartTime>
+                    <AllowPassageOfTime>false</AllowPassageOfTime>
+                  </Time>
+                  <Weather>clear</Weather>
+                </ServerInitialConditions>
                 <ServerHandlers>
                   <FlatWorldGenerator generatorString="2;10x0;1;"/>
                   <DrawingDecorator>
@@ -269,7 +276,7 @@ def run_mission():
             print("Mission {} \n\t{} --> {}\n\tOptimal Path: {}".format(i, list(start), dest, quickest_path))
             # Loop until mission ends:
             while world_state.is_mission_running:
-                time.sleep(0.008)
+                time.sleep(0.01)
                 ## -- PFNN
                 # Get agent action
                 world_state = agent_host.getWorldState()
@@ -300,9 +307,9 @@ def run_mission():
                     else:
                         s1 = s
                         new_dist = len(get_path_dikjstra(start, dest, s1)[0])
-                    r = pfn.get_reward(move_loc, dest, did_move, optimal_path, get_neighbors(move_loc, farm[0]), new_dist)
+                    r = pfn.get_reward(move_loc, dest, did_move, optimal_path, new_dist)
                     #print(total_steps, r)
-                    if r >= 5:
+                    if r == 20:
                         d = True
                     total_steps += 1
                     episodeBuffer.add(np.reshape(np.array([s, a, r, s1, d]), [1, 5]))
@@ -327,8 +334,8 @@ def run_mission():
                     episode_steps += 1
                     record_s = 1 if d else 0
                     record_agent_movement(i, episode_steps, move_loc, dest, a, r, record_s)
-                    if d or episode_steps > 200:
-                        if episode_steps > 200:
+                    if d or episode_steps > 300:
+                        if episode_steps > 300:
                             print("\tAgent Lost...")
                         elif episode_steps == 1 :
                             print("\tSuccessful Navigation in {} step!".format(episode_steps))
@@ -343,9 +350,9 @@ def run_mission():
             pfn.reset_already_travelled()
             print("Mission ended\n")
             # Mission has ended.
-            time.sleep(0.5)
+            time.sleep(1)
 
 
 if __name__ == "__main__":
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-    run_mission()
+    train_agent()

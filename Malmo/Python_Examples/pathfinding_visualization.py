@@ -8,6 +8,7 @@ import pandas as pd
 import cv2
 from cv2 import VideoWriter, VideoWriter_fourcc
 from PIL import Image
+from scipy.signal import savgol_filter
 
 
 
@@ -238,21 +239,49 @@ def add_to_dict(d, k, v):
     return d
 
 
+def graph_pathfinding_reward(df):
+    d = df[['epNum', 'reward']]
+    g = d.transform(lambda x: (x - x.mean)/x.std())
+    print(g.head())
+    y = g.values
+    plt.figure(figsize = (10, 5))
+    plt.title('Agent Reward')
+    plt.xlabel('Step Number')
+    plt.ylabel('Avg Reward')
+    plt.plot(y)
+    plt.show()
+    print(d.head())
+
+
 def graph_success_by_dest(df):
     d = df[['epNum', 'destX', 'destZ', 'success']]
     visited_dests = []
     for dest in zip(d['destX'].values, d['destZ'].values):
         if not dest in visited_dests:
             visited_dests.append(dest)
-            g = d.groupby(['destX', 'destZ']).get_group(dest).groupby('epNum')
-            print(g.groups.keys())
-            x = []
+            eps = list(d.groupby(['destX', 'destZ']).get_group(dest).groupby('epNum').groups.keys())
+            total, successes = 0, 0
+            x = eps
             y = []
-            for k in g.groups.keys():
-                pass
-                
-            #successes = g['success'].value_counts()
-            #print(dest, successes[1]/(successes[0] + successes[1]))
+            colors = []
+            for ep in eps:
+                t = d.loc[(d['epNum']==ep) & d['success'] == 1]
+                if not t.empty:
+                    successes += 1
+                    colors.append('orange')
+                else:
+                    colors.append('blue')
+                total += 1
+                y.append(successes/total)
+
+            plt.title("Destination {} Navigation Performance".format(dest))
+            plt.xlabel("Episode Number")
+            plt.ylabel("Success %")
+            plt.ylim(-0.05, 1.05)
+            plt.scatter(x, y, c=colors, alpha = 0.5)
+            plt.plot(np.linspace(0, max(x)), np.poly1d(np.polyfit(x, y, 3))(np.linspace(0, max(x))), color='black')
+            plt.savefig("data/nav_success/{}_{}.png".format(int(dest[0]), int(dest[1])))
+            plt.close()
 
 
 def get_best_dest(df):
@@ -280,8 +309,9 @@ def print_dict_sorted(d):
         print('{}: {}'.format(k, v))
 
 if __name__ == "__main__":
-    data = pd.read_csv("data/movement2.csv")
+    data = pd.read_csv("data/movement.csv")
     t = time.time()
+    #graph_pathfinding_reward(data)
     graph_success_by_dest(data)
     #dest = get_best_dest(data)
     #animate_dest_movement(data, dest, "dest_{}_{}".format(dest[0], dest[1]))
