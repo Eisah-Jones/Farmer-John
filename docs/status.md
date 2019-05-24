@@ -1,1 +1,6 @@
-#TEST
+---
+layout: default
+title:  Status
+---
+
+# TEST
