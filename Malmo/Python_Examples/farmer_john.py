@@ -48,7 +48,7 @@ def get_agent_pos(f, n):
     pos = None
     for i in range(n):
         for j in range(n):
-            if f[0][i][j] == "white_shulker_box" and (random.random() < 0.02 or pos is None):
+            if f[0][i][j] == "white_shulker_box" and (random.random() < 0.33 or pos is None):
                 pos = (i, j)
     return pos
 
@@ -107,15 +107,15 @@ def print_state(s):
 
 def create_agent_movement_record():
     f = open("data/performance.csv", "w")
-    f.write("epNum,stepNum,posX,posZ,destX,destZ,action,reward,success\n")
+    f.write("epNum,stepNum,posX,posZ,destX,destZ,action,reward,success,dist\n")
     f.close()
 
 
 
-def record_agent_movement(epNum, stepNum, pos, dest, action, reward, success):
+def record_agent_movement(epNum, stepNum, pos, dest, action, reward, success, dist):
     # record episode num, step num, pos, action, reward
     f = open("data/performance.csv", "a")
-    f.write("{},{},{},{},{},{},{},{},{}\n".format(epNum,stepNum,pos[0],pos[1],dest[0],dest[1],action,reward,success))
+    f.write("{},{},{},{},{},{},{},{},{},{}\n".format(epNum,stepNum,pos[0],pos[1],dest[0],dest[1],action,reward,success,dist))
     f.close()
         
     
@@ -131,7 +131,7 @@ def train_agent():
               </About>
 
 		   <ModSettings>
-		      <MsPerTick>2</MsPerTick>
+		      <MsPerTick>1</MsPerTick>
 		   </ModSettings>
 
               <ServerSection>
@@ -272,23 +272,16 @@ def train_agent():
             episode_steps = 0
             quickest_path = len(get_path_dikjstra(start, dest, s)[0])-1
             random_steps = 0
-            record_agent_movement(i, episode_steps, start, dest, a, 0, 0)
+            record_agent_movement(i, episode_steps, start, dest, a, 0, 0, quickest_path)
             print("Mission {} \n\t{} --> {}\n\tOptimal Path: {}".format(i, list(start), dest, quickest_path))
             # Loop until mission ends:
             while world_state.is_mission_running:
-                time.sleep(0.01)
-                ## -- PFNN
-                # Get agent action
+                time.sleep(0.002)
+            ## -- PFNN START
                 world_state = agent_host.getWorldState()
                 for error in world_state.errors:
                     print("Error:", error.text)
                 if not len(world_state.observations) == 0:
-                    # Get new world state, reward, d
-                    #print_state(s)
-                    msg = world_state.observations[0].text
-                    ob = json.loads(msg)
-                    start = [int(ob['XPos']), int(ob['ZPos'])]
-                    #print("\n", get_pathfinding_input(farm[0], start, dest, prev_pos), "\n")
                     prev_pos = start
                     optimal_path = get_path_dikjstra(start, dest, s)
                     if np.random.rand(1) < e or (total_steps < pfn.pre_train_steps and not pfn.load_model):
@@ -296,11 +289,11 @@ def train_agent():
                         a = np.random.randint(0, 4)
                     else:
                         a = sess.run(mainQN.predict, feed_dict={mainQN.scalarInput: [s]})[0]
-                        #print("  NN move:", pf_action[a])
                     move_result = move_agent(a, agent_host, start, farm[0])
                     move_loc = move_result[1]
                     did_move = move_result[0]
                     if did_move == 1:
+                        start = move_loc
                         s1 = get_pathfinding_input(farm[0], move_loc, dest)
                         s1 = pfn.process_state(s1)
                         new_dist = len(get_path_dikjstra(move_loc, dest, s1)[0])
@@ -308,8 +301,7 @@ def train_agent():
                         s1 = s
                         new_dist = len(get_path_dikjstra(start, dest, s1)[0])
                     r = pfn.get_reward(move_loc, dest, did_move, optimal_path, new_dist)
-                    #print(total_steps, r)
-                    if r == 20:
+                    if r == 100:
                         d = True
                     total_steps += 1
                     episodeBuffer.add(np.reshape(np.array([s, a, r, s1, d]), [1, 5]))
@@ -332,10 +324,10 @@ def train_agent():
                             pfn.update_target(targetOps, sess)
                     s = s1
                     episode_steps += 1
-                    record_s = 1 if d else 0
-                    record_agent_movement(i, episode_steps, move_loc, dest, a, r, record_s)
-                    if d or episode_steps > 300:
-                        if episode_steps > 300:
+                    record_s = 1 if d else 0 ## success value for .csv
+                    record_agent_movement(i, episode_steps, move_loc, dest, a, r, record_s, new_dist-1)
+                    if d or episode_steps > 200:
+                        if episode_steps > 200:
                             print("\tAgent Lost...")
                         elif episode_steps == 1 :
                             print("\tSuccessful Navigation in {} step!".format(episode_steps))
@@ -346,13 +338,185 @@ def train_agent():
 
                 myBuffer.add(episodeBuffer.buffer)
             saver.save(sess, pfn.path+"model-epi-"+str(i)+".ckpt")
-            # -- PFNN
+            # -- PFNN END
             pfn.reset_already_travelled()
             print("Mission ended\n")
             # Mission has ended.
             time.sleep(1)
 
 
+
+def test_agent():
+    random.seed(time.time())
+    mission_xml = '''<?xml version="1.0" encoding="UTF-8" ?>
+            <Mission xmlns="http://ProjectMalmo.microsoft.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+              <About>
+                <Summary>Setup Farm</Summary>
+              </About>
+
+		   <ModSettings>
+		      <MsPerTick>5</MsPerTick>
+		   </ModSettings>
+
+              <ServerSection>
+                <ServerInitialConditions>
+                  <Time>
+                    <StartTime>0</StartTime>
+                    <AllowPassageOfTime>false</AllowPassageOfTime>
+                  </Time>
+                  <Weather>clear</Weather>
+                </ServerInitialConditions>
+                <ServerHandlers>
+                  <FlatWorldGenerator generatorString="2;10x0;1;"/>
+                  <DrawingDecorator>
+                  </DrawingDecorator>
+                  <ServerQuitWhenAnyAgentFinishes/>
+                </ServerHandlers>
+              </ServerSection>
+
+              <AgentSection mode="Survival">
+                <Name>FarmerBot</Name>
+                <AgentStart>
+                  <Placement yaw="-90"/>
+                  <Inventory>
+                    <InventoryObject slot="0" type="wheat_seeds" quantity="64"/>
+                    <InventoryObject slot="1" type="carrot" quantity="64"/>
+                    <InventoryObject slot="2" type="potato" quantity="64"/>
+                  </Inventory>
+                </AgentStart>
+                <AgentHandlers>
+                  <ObservationFromFullStats/>
+                  <ContinuousMovementCommands/>
+                  <AbsoluteMovementCommands/>
+                </AgentHandlers>
+              </AgentSection>
+            </Mission>'''
+
+    # Create Agent Host
+    agent_host = MalmoPython.AgentHost()
+    try:
+        agent_host.parse(sys.argv)
+    except RuntimeError as e:
+        print('ERROR:', e)
+        print(agent_host.getUsage())
+        exit(1)
+    if agent_host.receivedArgument("help"):
+        print(agent_host.getUsage())
+        exit(0)
+
+    agent_host.setObservationsPolicy( MalmoPython.ObservationsPolicy.LATEST_OBSERVATION_ONLY )
+    # Create Mission
+    my_mission = MalmoPython.MissionSpec(mission_xml, True)
+    my_mission_record = MalmoPython.MissionRecordSpec()
+
+    # Create Farm
+    size = 16 #32
+    size += size % 2  # Make sure the size is even
+    # 3D-array of the farm
+    #   farm[0] = 2D-array color_shulker_box data
+    #   farm[1] = 2D-array minecraft block data
+    farm = fg.generate_farm(size)
+    spawn_farm(farm, size, my_mission)
+    agent_spawn = get_agent_pos(farm, size)
+    my_mission.startAt(agent_spawn[0], 4, agent_spawn[1])
+
+    # Actual plots where crops are planted and walkable area
+    farmland = []
+    walkable = []
+    for r in range(size):
+        for c in range(size):
+            if farm[0][r][c] == "brown_shulker_box":
+                farmland.append((r, c))
+            elif farm[0][r][c] == "white_shulker_box":
+                walkable.append((r, c))    
+
+    # Attempt to start a mission:
+    max_retries = 3
+    for retry in range(max_retries):
+        try:
+            agent_host.startMission(my_mission, my_mission_record)
+            break
+        except RuntimeError as e:
+            if retry == max_retries - 1:
+                print("Error starting mission:", e)
+                exit(1)
+            else:
+                time.sleep(2)
+
+    # Loop until mission starts:
+    print("Waiting for the mission to start ", end=' ')
+    world_state = agent_host.getWorldState()
+    while not world_state.has_mission_begun:
+        print(".", end="")
+        time.sleep(1)
+        world_state = agent_host.getWorldState()
+        for error in world_state.errors:
+            print("Error:", error.text)
+
+    print("\nMission running ", end=' ')
+
+    ## -- PFNN var init
+    mainQN = pfn.QPathFinding(pfn.h_size)
+    targetQN = pfn.QPathFinding(pfn.h_size)
+
+    init = tf.global_variables_initializer()
+    saver = tf.train.Saver()
+    trainables = tf.trainable_variables()
+    targetOps = pfn.updateTargetGraph(trainables, pfn.tau)
+    ## --- PFNN
+    success = 0
+    total = 0
+    if not os.path.exists(pfn.path):
+        os.makedirs(pfn.path)
+    print()
+    ## Setup tensorflow session
+    with tf.Session() as sess:
+        sess.run(init)
+        ckpt = tf.train.get_checkpoint_state(pfn.path)
+        saver.restore(sess, ckpt.model_checkpoint_path)
+        print("\nLOADED EXISTING MODEL\n")
+        for plot in farmland:
+            for pos in walkable:
+                s = get_pathfinding_input(farm[0], pos, plot)
+                s = pfn.process_state(s)
+                agent_host.sendCommand("tp {} 2 {}".format(pos[0], pos[1]))
+                print(plot, pos)
+                steps = 0
+                total += 1
+                time.sleep(0.1)
+                while world_state.is_mission_running:
+                    steps += 1
+                    time.sleep(0.025)
+                ## -- PFNN START
+                    world_state = agent_host.getWorldState()
+                    for error in world_state.errors:
+                        print("Error:", error.text)
+                    if not len(world_state.observations) == 0:
+                        msg = world_state.observations[0].text
+                        ob = json.loads(msg)
+                        start = [int(ob['XPos']), int(ob['ZPos'])]
+                        a = sess.run(mainQN.predict, feed_dict={mainQN.scalarInput: [s]})[0]
+                        move_result = move_agent(a, agent_host, start, farm[0])
+                        move_result = move_agent(a, agent_host, start, farm[0])
+                        move_loc = move_result[1]
+                        did_move = move_result[0]
+                        if did_move == 1:
+                            s = get_pathfinding_input(farm[0], move_loc, plot)
+                            s = pfn.process_state(s)
+                            new_dist = len(get_path_dikjstra(move_loc, plot, s)[0])
+                    if new_dist-1 < 2:
+                        print('SUCCESS', steps)
+                        success += 1
+                        break
+                    elif steps > 200:
+                        print('FAILURE')
+                        break
+        print(success/total)
+
+                        
+
 if __name__ == "__main__":
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+    #test_agent()
     train_agent()
