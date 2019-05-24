@@ -1,13 +1,16 @@
 ---
 layout: default
-title:  Team
+title:  Team Members
 ---
 
 # {{ page.title }}
 
 
-## USER 1
+## TEAM MEMBER 1
 Eisah Jones: jonesea
 
-## USER 2
+## TEAM MEMBER 2
 Chris Barclay: crbarcla
+
+## TEAM MEMBER 3
+Paul Badalian: pbadalia
