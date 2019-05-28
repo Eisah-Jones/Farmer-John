@@ -29,14 +29,19 @@ Unfortunately, this is not the case for all of the plots on the farm.
 ![](https://github.com/Eisah-Jones/Farmer-John/blob/master/images/nav_success/11_6.png)
 ![](https://github.com/Eisah-Jones/Farmer-John/blob/master/images/nav_success/12_5.png)
 
-We can graph the final success percentage values to gain a better idea of the "knowledge" of the agent.
+Based on the graphs that were generated, we can see that the agent is able to navigate to plots with an x coordinate of 4, 5, or 6 but has a more difficult time navigating to plots with an x coordinate of 10, 11, or 12. While we do have the success rate of the agent, this does not give us much information about where the agent spends its time while navigating to some plot destinations. In order to get this information, we created heatmaps that show how often the agent moved to, or attempted to move to, some block on the farm. Based on this we can get an idea of how well the agent learned to navigate to each of the plots.
 
-Based on this graph we can see that destinations on the left side of the farm...
+Here are some heatmaps for destinations the agent was easily able to navigate towards.
+![](https://github.com/Eisah-Jones/Farmer-John/blob/master/images/heatmaps/4_4.png)
+![](https://github.com/Eisah-Jones/Farmer-John/blob/master/images/heatmaps/4_12.png)
+![](https://github.com/Eisah-Jones/Farmer-John/blob/master/images/heatmaps/5_4.png)
+![](https://github.com/Eisah-Jones/Farmer-John/blob/master/images/heatmaps/6_10.png)
 
-
-
-
-Now that we have evaluated it's success, we will evaluate the efficiency of the model. This can be done by evaluating heatmaps for destination navigation. This gives us an idea of where the agent tends to spend its time throughout the training process.
+Here are some heatmaps for destinations the agent was not easily able to navigate towards.
+![](https://github.com/Eisah-Jones/Farmer-John/blob/master/images/heatmaps/6_5.png)
+![](https://github.com/Eisah-Jones/Farmer-John/blob/master/images/heatmaps/10_4.png)
+![](https://github.com/Eisah-Jones/Farmer-John/blob/master/images/heatmaps/11_6.png)
+![](https://github.com/Eisah-Jones/Farmer-John/blob/master/images/heatmaps/12_5.png)
 
 
 
