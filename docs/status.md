@@ -52,7 +52,8 @@ We identified a few metrics to determine the performance of our agent. First, we
 <img src="https://github.com/Eisah-Jones/Farmer-John/raw/master/images/nav_success/6_10.png" alt="" style="max-width:50%;">
 
 ```
-This is exactly what we wanted to see from our agent. Unfortunately, this is not the case for all of the plots on the farm.
+This is exactly what we wanted to see from our agent. 
+Unfortunately, this is not the case for all of the plots on the farm.
 ```
 <img src="https://github.com/Eisah-Jones/Farmer-John/raw/master/images/nav_success/6_5.png" alt="" style="max-width:50%;">
 <img src="https://github.com/Eisah-Jones/Farmer-John/raw/master/images/nav_success/10_4.png" alt="" style="max-width:50%;">
