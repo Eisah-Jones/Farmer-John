@@ -9,7 +9,7 @@ Farmer John is getting too old and achy to be working on his farm all day everyd
 
 Stay checked-in with our progress:
 
-Source code: https://github.com/Eisah-Jones/Farmer-John
+You can find all the source code [here](https://github.com/Eisah-Jones/Farmer-John/tree/development)!
 
 Reports:
 
