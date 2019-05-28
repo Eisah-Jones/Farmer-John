@@ -89,7 +89,7 @@ def animate_dest_movement(df, dest, fname, reset_ep = False):
 
     width = 675
     height = 566
-    FPS = 24
+    FPS = 60
     seconds = 10
     fourcc = VideoWriter_fourcc('m', 'p', '4', 'v')
     video = VideoWriter('data/heatmaps/anim_dest/{}.mov'.format(fname), fourcc, float(FPS), (width, height))
@@ -101,7 +101,8 @@ def animate_dest_movement(df, dest, fname, reset_ep = False):
     lastE = -1
     for x, z, e in zip(posX_steps, posZ_steps, epNums):
         if frameNum % 1000 == 0:
-            print(frameNum)
+            print(frameNum, time.time() - _time)
+            _time = time.time()
         if reset_ep and not lastE == e:
             lastE = e
             dfNum = 0
@@ -256,6 +257,7 @@ def graph_pathfinding_reward(df):
 def graph_success_by_dest(df):
     d = df[['epNum', 'destX', 'destZ', 'success']]
     visited_dests = []
+    performance = {}
     for dest in zip(d['destX'].values, d['destZ'].values):
         if not dest in visited_dests:
             visited_dests.append(dest)
@@ -263,6 +265,7 @@ def graph_success_by_dest(df):
             total, successes = 0, 0
             x = eps
             y = []
+            dist = []
             colors = []
             for ep in eps:
                 t = d.loc[(d['epNum']==ep) & d['success'] == 1]
@@ -273,15 +276,26 @@ def graph_success_by_dest(df):
                     colors.append('blue')
                 total += 1
                 y.append(successes/total)
+                
+            performance[dest] = y[-1]
+            ## Check if rolling avergae produces better results
+            rollingFrame = pd.DataFrame(np.array(y), columns=['y'])
+            y = rollingFrame.rolling(100).mean()
 
             plt.title("Destination {} Navigation Performance".format(dest))
             plt.xlabel("Episode Number")
             plt.ylabel("Success %")
             plt.ylim(-0.05, 1.05)
             plt.scatter(x, y, c=colors, alpha = 0.5)
-            plt.plot(np.linspace(0, max(x)), np.poly1d(np.polyfit(x, y, 3))(np.linspace(0, max(x))), color='black')
+            #plt.plot(np.linspace(0, max(x)), np.poly1d(np.polyfit(x, y, 3))(np.linspace(0, max(x))), color='black')
             plt.savefig("data/nav_success/{}_{}.png".format(int(dest[0]), int(dest[1])))
             plt.close()
+
+            fig = plt.figure()
+            ax = plt.axes(projection='3d')
+            
+            
+    return performance
 
 
 def get_best_dest(df):
@@ -302,6 +316,19 @@ def get_best_dest(df):
 
     return occur
 
+
+def graph_avg_dist_by_dest(df):
+    dests = dict()
+    for idx, row in df.iterrows():
+        dest = (row['destX'], row['destZ'])
+        dist = row['dist']
+        if not dest in dests.keys():
+            dests[dest] = [dist]
+        else:
+            dests[dest].append(dist)
+            
+
+
 def print_dict_sorted(d):
     dest = [(v, k) for k, v in d.items()]
     dest.sort(reverse=True)
@@ -309,10 +336,21 @@ def print_dict_sorted(d):
         print('{}: {}'.format(k, v))
 
 if __name__ == "__main__":
-    data = pd.read_csv("data/movement.csv")
+    data = pd.read_csv("data/movement2.csv")
     t = time.time()
     #graph_pathfinding_reward(data)
-    graph_success_by_dest(data)
+    #graph_success_by_dest(data)
+    #print(performance)
+    #plt.bar(performance.values(), performance.keys())
+    #plt.savefig('bar.png')
     #dest = get_best_dest(data)
-    #animate_dest_movement(data, dest, "dest_{}_{}".format(dest[0], dest[1]))
+##    for i in range(16):
+##        for j in range(16):
+##            if (i in [4, 6, 10, 12] and j in [4, 6, 10, 12]) or \
+##               (i in [5, 11] and j in [4, 6, 10, 12]) or \
+##               (j in [5, 11] and i in [4, 6, 10, 12]) :
+##                dest = (i, j)
+##                plot_dest_movement(data, dest)
+    dest = (6, 5)
+    animate_dest_movement(data[:len(data)//8], dest, "dest_{}_{}".format(dest[0], dest[1]))
     #print_dict_sorted(dest)

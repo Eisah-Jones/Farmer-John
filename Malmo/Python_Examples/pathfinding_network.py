@@ -8,19 +8,16 @@ import numpy as np
 
 import time
 
-np.random.seed(1)
-tf.set_random_seed(1)
-
 ## Training parameters
 batch_size = 64
 update_freq = 1
 y = 0.99
 startE = 1
 endE = 0.1
-annealing_steps = 100000.0
-num_episodes = 15000
-pre_train_steps = 50000
-load_model = False
+annealing_steps = 10000.0
+num_episodes = 30000
+pre_train_steps = 10000
+load_model = True
 path = "testing/"
 h_size = 256
 tau = 0.001
@@ -34,15 +31,15 @@ class QPathFinding:
         self.scalarInput = tf.placeholder(shape=[None,256], dtype=tf.float32)
         self.imageIn = tf.reshape(self.scalarInput, shape=[-1, 16, 16, 1])
 
-        self.conv1 = slim.conv2d(inputs = self.imageIn, num_outputs = 16, \
+        self.conv1 = slim.conv2d(inputs = self.imageIn, num_outputs = 32, \
                                  kernel_size = [2, 2], stride = [1, 1], \
                                  padding = 'VALID', biases_initializer=None)
         
-        self.conv2 = slim.conv2d(inputs = self.conv1, num_outputs = 32, \
+        self.conv2 = slim.conv2d(inputs = self.conv1, num_outputs = 64, \
                                  kernel_size = [3, 3], stride = [2, 2], \
                                  padding = 'VALID', biases_initializer=None)
 
-        self.conv3 = slim.conv2d(inputs = self.conv2, num_outputs = 64, \
+        self.conv3 = slim.conv2d(inputs = self.conv2, num_outputs = 128, \
                                  kernel_size = [2, 2], stride = [1, 1], \
                                  padding = 'VALID', biases_initializer=None)
 
@@ -76,7 +73,7 @@ class QPathFinding:
 
 
 class experience_buffer():
-    def __init__(self, buffer_size = 50000):
+    def __init__(self, buffer_size = 100000):
         self.buffer = []
         self.buffer_size = buffer_size
 
@@ -122,29 +119,26 @@ def get_reward(start, end, moved, optimal_path, new_dist):
     optimal_y = get_col(optimal_move, dim)
 
     result = 0
-##    if len(path) == new_dist:
-##        result -= 5
-##    elif len(path) < new_dist:
-##        print('SUCK')
-##        result -= 10
-##    else:
-##        result += 10
+    if len(path) == new_dist:
+        result -= 10
+    elif len(path) < new_dist:
+        result -= 20
+    else:
+        result += 20
 
 
     dist = new_dist-1
     if dist < 2: # If within interaction distance
         return 100
     result -= dist * 0.2
-    #result -= (dist-1)/2
-##    if moved == -1: # If made an invalid move
-##        result -= 2
-##    else:
-##        result -= 0.1
+    if moved == -1: # If made an invalid move
+        result -= 10
+    else:
+        result -= 1
 ##    if start in already_travelled: # If has already been to block
-##        result -= 0.75
+##        result -= 5
 ##    else:
-##        already_travelled.append(start)
-    #print(dist, dist * 0.4, result)
+##        already_travelled.append(start) 
     return result
 
 

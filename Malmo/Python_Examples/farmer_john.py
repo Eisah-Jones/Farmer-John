@@ -77,7 +77,7 @@ def move_agent(i, a, pos, f):
         x, z = pos[0] - 1, pos[1]
     if (x < 0 or x > 15 or z < 0 or z > 15 or f[x][z] in ["brown_shulker_box", "blue_shulker_box"]):
         return -1, (x,z)
-    a.sendCommand("tp {} 2 {}".format(x, z))
+    a.sendCommand("tp {} 2 {}".format(x+0.5, z+0.5))
     return 1, (x,z)
 
 
@@ -247,6 +247,7 @@ def train_agent():
     total_steps = 0
     start = agent_spawn
     create_agent_movement_record()
+    destIdx = 0
     ## --- PFNN
     if not os.path.exists(pfn.path):
         os.makedirs(pfn.path)
@@ -276,7 +277,7 @@ def train_agent():
             print("Mission {} \n\t{} --> {}\n\tOptimal Path: {}".format(i, list(start), dest, quickest_path))
             # Loop until mission ends:
             while world_state.is_mission_running:
-                time.sleep(0.002)
+                #time.sleep(0.002)
             ## -- PFNN START
                 world_state = agent_host.getWorldState()
                 for error in world_state.errors:
@@ -326,8 +327,8 @@ def train_agent():
                     episode_steps += 1
                     record_s = 1 if d else 0 ## success value for .csv
                     record_agent_movement(i, episode_steps, move_loc, dest, a, r, record_s, new_dist-1)
-                    if d or episode_steps > 200:
-                        if episode_steps > 200:
+                    if d or episode_steps > quickest_path*4:
+                        if episode_steps > quickest_path*4:
                             print("\tAgent Lost...")
                         elif episode_steps == 1 :
                             print("\tSuccessful Navigation in {} step!".format(episode_steps))
@@ -342,7 +343,7 @@ def train_agent():
             pfn.reset_already_travelled()
             print("Mission ended\n")
             # Mission has ended.
-            time.sleep(1)
+            #time.sleep(1)
 
 
 
@@ -356,7 +357,7 @@ def test_agent():
               </About>
 
 		   <ModSettings>
-		      <MsPerTick>5</MsPerTick>
+		      <MsPerTick>2</MsPerTick>
 		   </ModSettings>
 
               <ServerSection>
@@ -481,38 +482,35 @@ def test_agent():
                 s = get_pathfinding_input(farm[0], pos, plot)
                 s = pfn.process_state(s)
                 agent_host.sendCommand("tp {} 2 {}".format(pos[0], pos[1]))
+                start = pos
                 print(plot, pos)
                 steps = 0
                 total += 1
                 time.sleep(0.1)
                 while world_state.is_mission_running:
                     steps += 1
-                    time.sleep(0.025)
                 ## -- PFNN START
                     world_state = agent_host.getWorldState()
                     for error in world_state.errors:
                         print("Error:", error.text)
                     if not len(world_state.observations) == 0:
-                        msg = world_state.observations[0].text
-                        ob = json.loads(msg)
-                        start = [int(ob['XPos']), int(ob['ZPos'])]
                         a = sess.run(mainQN.predict, feed_dict={mainQN.scalarInput: [s]})[0]
-                        move_result = move_agent(a, agent_host, start, farm[0])
                         move_result = move_agent(a, agent_host, start, farm[0])
                         move_loc = move_result[1]
                         did_move = move_result[0]
                         if did_move == 1:
+                            start = move_loc
                             s = get_pathfinding_input(farm[0], move_loc, plot)
                             s = pfn.process_state(s)
                             new_dist = len(get_path_dikjstra(move_loc, plot, s)[0])
                     if new_dist-1 < 2:
-                        print('SUCCESS', steps)
+                        #print('SUCCESS', steps)
                         success += 1
                         break
-                    elif steps > 200:
-                        print('FAILURE')
+                    elif steps > 10000:
+                        #print('FAILURE')
                         break
-        print(success/total)
+            print(plot, success/total)
 
                         
 
