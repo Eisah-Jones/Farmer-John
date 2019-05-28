@@ -9,7 +9,8 @@ title:  Status
 # Project Summary
 
 The goal of our project is to make a farm maintenance AI agent that can help farmer John with all of his farming duties. Our agent will be able to navigate the farm, moving from plot to plot, planting and harvesting as efficiently as possible. The agent will have the choice to plant between wheat, carrots, and potatoes all which have different reward values for being planted and harvested. Evaluating the value of the state over a regular time interval should give us a good estimate of how efficiently the agent is working.
-![](https://github.com/Eisah-Jones/Farmer-John/blob/master/images/Reference/agent.gif)
+
+<img src="https://github.com/Eisah-Jones/Farmer-John/blob/master/images/Reference/agent.gif" alt="" style="max-width:50%;">
 
 # Approach
 For the first half of this project we are focusing on the pathfinding abilities of the agent. This is powered by a Dueling Double Deep Q Network which consists of 4 convolutional layers and splits into two networks; the main and target network. The main network computes the value function of the state. This function tells us how good it is to be in any given state. The target network computes the advantage function of the state. This function tells us how much better taking a certain action would be compared to others. We then sum these values to get our final Q-value. These functions are then combined into one final Q-function in the final layer. The output is a number from 0-4, each number representing an action in {front, left, right, back}. 
