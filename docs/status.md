@@ -24,7 +24,7 @@ State-Action Q-function
 Q(s, a) = V(s) + A(a)
 ```
 
-Network Training Equations
+Network Training Update
 ```
 if total_steps % (pfn.update_freq) == 0:
     trainBatch = myBuffer.sample(pfn.batch_size)
