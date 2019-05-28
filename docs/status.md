@@ -18,7 +18,7 @@ As we wrap up the pathfinding portion of the project we are beginning to build a
 
 # Evaluation
 We identified a few metrics to determine the performance of our agent. First, we evaluated the rolling average of the percentage of successful navigations for each destination during training. For the rolling average, we took the average success performance from the nearest 100 episodes and plotted those values. This gives us an idea of how well the agent learns as the training progresses. From the following graphs we can see that the agent has learned how to navigate to a good number of plots, with a fair success rate.
-![](https://github.com/Eisah-Jones/Farmer-John/blob/master/images/nav_success/4_4.png)
+![](https://github.com/Eisah-Jones/Farmer-John/blob/master/images/nav_success/4_4.png | width=100)
 ![](https://github.com/Eisah-Jones/Farmer-John/blob/master/images/nav_success/4_12.png)
 ![](https://github.com/Eisah-Jones/Farmer-John/blob/master/images/nav_success/5_4.png)
 ![](https://github.com/Eisah-Jones/Farmer-John/blob/master/images/nav_success/6_10.png)
