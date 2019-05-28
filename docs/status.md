@@ -10,7 +10,7 @@ title:  Status
 
 The goal of our project is to make a farm maintenance AI agent that can help farmer John with all of his farming duties. Our agent will be able to navigate the farm, moving from plot to plot, planting and harvesting as efficiently as possible. The agent will have the choice to plant between wheat, carrots, and potatoes all which have different reward values for being planted and harvested. Evaluating the value of the state over a regular time interval should give us a good estimate of how efficiently the agent is working.
 
-<img src="https://github.com/Eisah-Jones/Farmer-John/blob/master/images/Reference/agent.gif" alt="" style="max-width:50%;">
+<img src="https://github.com/Eisah-Jones/Farmer-John/raw/master/images/Reference/agent.gif" alt="" style="max-width:100%;">
 
 # Approach
 For the first half of this project we are focusing on the pathfinding abilities of the agent. This is powered by a Dueling Double Deep Q Network which consists of 4 convolutional layers and splits into two networks; the main and target network. The main network computes the value function of the state. This function tells us how good it is to be in any given state. The target network computes the advantage function of the state. This function tells us how much better taking a certain action would be compared to others. We then sum these values to get our final Q-value. These functions are then combined into one final Q-function in the final layer. The output is a number from 0-4, each number representing an action in {front, left, right, back}. 
@@ -45,26 +45,30 @@ As we wrap up the pathfinding portion of the project we are beginning to build a
 
 # Evaluation
 We identified a few metrics to determine the performance of our agent. First, we evaluated the rolling average of the percentage of successful navigations for each destination during training. For the rolling average, we took the average success performance from the nearest 100 episodes and plotted those values. This gives us an idea of how well the agent learns as the training progresses. From the following graphs we can see that the agent has learned how to navigate to a good number of plots, with a fair success rate.
+
 <img src="https://github.com/Eisah-Jones/Farmer-John/raw/master/images/nav_success/4_4.png" alt="" style="max-width:50%;">
 <img src="https://github.com/Eisah-Jones/Farmer-John/raw/master/images/nav_success/4_12.png" alt="" style="max-width:50%;">
 <img src="https://github.com/Eisah-Jones/Farmer-John/raw/master/images/nav_success/5_4.png" alt="" style="max-width:50%;">
 <img src="https://github.com/Eisah-Jones/Farmer-John/raw/master/images/nav_success/6_10.png" alt="" style="max-width:50%;">
-
+```
 This is exactly what we wanted to see from our agent. Unfortunately, this is not the case for all of the plots on the farm.
+```
 <img src="https://github.com/Eisah-Jones/Farmer-John/raw/master/images/nav_success/6_5.png" alt="" style="max-width:50%;">
 <img src="https://github.com/Eisah-Jones/Farmer-John/raw/master/images/nav_success/10_4.png" alt="" style="max-width:50%;">
 <img src="https://github.com/Eisah-Jones/Farmer-John/raw/master/images/nav_success/11_6.png" alt="" style="max-width:50%;">
 <img src="https://github.com/Eisah-Jones/Farmer-John/raw/master/images/nav_success/12_5.png" alt="" style="max-width:50%;">
 
 Based on the graphs that were generated, we can see that the agent is able to navigate to plots with an x coordinate of 4, 5, or 6 but has a more difficult time navigating to plots with an x coordinate of 10, 11, or 12. While we do have the success rate of the agent, this does not give us much information about where the agent spends its time while navigating to some plot destinations. In order to get this information, we created heatmaps that show how often the agent moved to, or attempted to move to, some block on the farm. Based on this we can get an idea of how well the agent learned to navigate to each of the plots, andgain some insight on how to improve the model.
-
+```
 Here are some heatmaps for destinations the agent was easily able to navigate towards.
+```
 <img src="https://github.com/Eisah-Jones/Farmer-John/raw/master/images/heatmaps/4_4.png" alt="" style="max-width:50%;">
 <img src="https://github.com/Eisah-Jones/Farmer-John/raw/master/images/heatmaps/4_12.png" alt="" style="max-width:50%;">
 <img src="https://github.com/Eisah-Jones/Farmer-John/raw/master/images/heatmaps/5_4.png" alt="" style="max-width:50%;">
 <img src="https://github.com/Eisah-Jones/Farmer-John/raw/master/images/heatmaps/6_10.png" alt="" style="max-width:50%;">
-
+```
 Here are some heatmaps for destinations the agent was not easily able to navigate towards.
+```
 <img src="https://github.com/Eisah-Jones/Farmer-John/raw/master/images/heatmaps/6_5.png" alt="" style="max-width:50%;">
 <img src="https://github.com/Eisah-Jones/Farmer-John/raw/master/images/heatmaps/10_4.png" alt="" style="max-width:50%;">
 <img src="https://github.com/Eisah-Jones/Farmer-John/raw/master/images/heatmaps/11_6.png" alt="" style="max-width:50%;">
