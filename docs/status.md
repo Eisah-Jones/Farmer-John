@@ -41,6 +41,29 @@ if total_steps % (pfn.update_freq) == 0:
 
 The network also takes advantage of Experience Replay. This allows the agent to store it's experiences, and then randomly draw batches of them to train the network. This should allow the agent to more robustly learn to navigate. In essence, this prevents the network from only learning what it is immediately doing in the environment, and allow it to learn from all of its past experiences. When the buffer reaches its maximum size, the oldest expereinces are removed as the new ones are added.
 
+Here is our buffer class:
+```
+class experience_buffer():
+    def __init__(self, buffer_size = 100000):
+        self.buffer = []
+        self.buffer_size = buffer_size
+
+    def add(self, experience):
+        if len(self.buffer) + len(experience) >= self.buffer_size:
+            self.buffer[0:(len(experience)+len(self.buffer))-self.buffer_size] = []
+        self.buffer.extend(experience)
+
+    def sample(self, size, dest):
+        return np.reshape(np.array(random.sample(self.buffer, size)), [size, 5])
+
+```
+
+
+This is how our buffer is saved during the training process:
+```
+episodeBuffer.add(np.reshape(np.array([s, a, r, s1, d]), [1, 5]))
+```
+
 As we wrap up the pathfinding portion of the project we are beginning to build and train the neural network for planting and harvesting decisions. This network will receive the content of each plot and agent inventory contents as an array of integers. We are in the last stages of finalizing a model and reward functions.
 
 # Evaluation
