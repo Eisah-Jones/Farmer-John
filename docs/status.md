@@ -50,6 +50,7 @@ We identified a few metrics to determine the performance of our agent. First, we
 <img src="https://github.com/Eisah-Jones/Farmer-John/raw/master/images/nav_success/4_12.png" alt="" style="max-width:50%;">
 <img src="https://github.com/Eisah-Jones/Farmer-John/raw/master/images/nav_success/5_4.png" alt="" style="max-width:50%;">
 <img src="https://github.com/Eisah-Jones/Farmer-John/raw/master/images/nav_success/6_10.png" alt="" style="max-width:50%;">
+
 ```
 This is exactly what we wanted to see from our agent. Unfortunately, this is not the case for all of the plots on the farm.
 ```
@@ -59,16 +60,20 @@ This is exactly what we wanted to see from our agent. Unfortunately, this is not
 <img src="https://github.com/Eisah-Jones/Farmer-John/raw/master/images/nav_success/12_5.png" alt="" style="max-width:50%;">
 
 Based on the graphs that were generated, we can see that the agent is able to navigate to plots with an x coordinate of 4, 5, or 6 but has a more difficult time navigating to plots with an x coordinate of 10, 11, or 12. While we do have the success rate of the agent, this does not give us much information about where the agent spends its time while navigating to some plot destinations. In order to get this information, we created heatmaps that show how often the agent moved to, or attempted to move to, some block on the farm. Based on this we can get an idea of how well the agent learned to navigate to each of the plots, andgain some insight on how to improve the model.
+
 ```
 Here are some heatmaps for destinations the agent was easily able to navigate towards.
 ```
+
 <img src="https://github.com/Eisah-Jones/Farmer-John/raw/master/images/heatmaps/4_4.png" alt="" style="max-width:50%;">
 <img src="https://github.com/Eisah-Jones/Farmer-John/raw/master/images/heatmaps/4_12.png" alt="" style="max-width:50%;">
 <img src="https://github.com/Eisah-Jones/Farmer-John/raw/master/images/heatmaps/5_4.png" alt="" style="max-width:50%;">
 <img src="https://github.com/Eisah-Jones/Farmer-John/raw/master/images/heatmaps/6_10.png" alt="" style="max-width:50%;">
+
 ```
 Here are some heatmaps for destinations the agent was not easily able to navigate towards.
 ```
+
 <img src="https://github.com/Eisah-Jones/Farmer-John/raw/master/images/heatmaps/6_5.png" alt="" style="max-width:50%;">
 <img src="https://github.com/Eisah-Jones/Farmer-John/raw/master/images/heatmaps/10_4.png" alt="" style="max-width:50%;">
 <img src="https://github.com/Eisah-Jones/Farmer-John/raw/master/images/heatmaps/11_6.png" alt="" style="max-width:50%;">
