@@ -19,7 +19,7 @@ As we wrap up the pathfinding portion of the project we are beginning to build a
 # Evaluation
   # Performance Graphs & Discussion
 We identified a few metrics to determine the performance of our agent. First, we evaluated its the number of successful navigations for each episode of the training. From the following graphs we can see that the agent has learned how to navigate to a good number of plots.
-[]()
+[](https://github.com/Eisah-Jones/Farmer-John/blob/master/images/nav_success/4_4.png)
 
 # Remaining Goals and Challenges
 
