@@ -14,7 +14,26 @@ The goal of our project is to make a farm maintenance AI agent that can help far
 # Approach
 For the first half of this project we are focusing on the pathfinding abilities of the agent. This is powered by a Dueling Double Deep Q Network which consists of 4 convolutional layers and splits into two networks; the main and target network. The main network computes the value function of the state. This function tells us how good it is to be in any given state. The target network computes the advantage function of the state. This function tells us how much better taking a certain action would be compared to others. We then sum these values to get our final Q-value. These functions are then combined into one final Q-function in the final layer. The output is a number from 0-4, each number representing an action in {front, left, right, back}. The reason we are using this type of network is because the size of the state space is giant. For each plot that is set as a destination, there are (farm_width^2)-(# plots and water blocks) possible position states. For our 16x16 farm with 4 standard square plots, there are a total of 7,040 possible states that our agent needs to learn and discover. The goal is to expand to larger farming areas, so this type of network also allows for this expansion. This stage of the project is nearly complete. Here is some more technical informatino about the network and it's policies.
 
-<img src="https://github.com/Eisah-Jones/Farmer-John/blob/master/images/Reference/DDQN.png" alt="" style="max-width:50%;">
+<img src="https://github.com/Eisah-Jones/Farmer-John/blob/master/images/Reference/DDQN_structure.png" alt="" style="max-width:50%;">
+
+Network Training Equations
+'''
+if e > pfn.endE:
+    e -= stepDrop
+
+if total_steps % (pfn.update_freq) == 0:
+    trainBatch = myBuffer.sample(pfn.batch_size)
+    Q1 = sess.run(mainQN.predict, feed_dict={mainQN.scalarInput:np.vstack(trainBatch[:,3])})
+    Q2 = sess.run(targetQN.Qout, feed_dict={targetQN.scalarInput:np.vstack(trainBatch[:,3])})
+    end_multiplier = -(trainBatch[:, 4] - 1)
+    doubleQ = Q2[range(pfn.batch_size), Q1]
+    targetQ = trainBatch[:,2] + (pfn.y*doubleQ*end_multiplier)
+    _ = sess.run(mainQN.updateModel, \
+        feed_dict={mainQN.scalarInput:np.vstack(trainBatch[:,0]), \
+                   mainQN.targetQ:targetQ, mainQN.actions:trainBatch[:,1]})
+    pfn.update_target(targetOps, sess)
+'''
+
 
 As we wrap up the pathfinding portion of the project we are beginning to build and train the neural network for planting and harvesting decisions. This network will receive the content of each plot and agent inventory contents as an array of integers. We are in the last stages of finalizing a model and reward functions.
 
