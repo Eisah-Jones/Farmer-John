@@ -8,14 +8,14 @@ title:  Status
 
 # Project Summary
 
-The goal of our project is to make a farm maintenance AI agent that can help farmer John with all of his farming duties. Our agent will be able to navigate the farm, moving from plot to plot, planting and harvesting as efficiently as possible. The agent will have the choice to plant between wheat, carrots, and potatoes all which have different reward values for being planted and harvested. Evaluating the value of the state over a regular time interval should give us a good estimate of how efficiently the agent is working.
+The goal of our project is to make a farm maintenance AI agent that can help farmer John with all of his farming duties. Our agent will be able to navigate the farm, moving from plot to plot, planting and harvesting as efficiently as possible. The agent will have the choice to plant wheat, carrots, and potatoes all which have different reward values for being planted and harvested. Evaluating the value of the state over a regular time interval should give us a good estimate of how efficiently the agent is working.
 
 <img src="https://github.com/Eisah-Jones/Farmer-John/raw/master/images/Reference/agent.gif" alt="" style="max-width:100%;">
 
 # Approach
-For the first half of this project we are focusing on the pathfinding abilities of the agent. This is powered by a Dueling Double Deep Q Network which consists of 4 convolutional layers and splits into two networks; the main and target network. The main network computes the value function of the state. This function tells us how good it is to be in any given state. The target network computes the advantage function of the state. This function tells us how much better taking a certain action would be compared to others. We then sum these values to get our final Q-value. These functions are then combined into one final Q-function in the final layer. The output is a number from 0-4, each number representing an action in {front, left, right, back}. 
+For the first half of this project we are focusing on the pathfinding abilities of the agent. This is powered by a Dueling Double Deep Q Network which consists of 4 convolutional layers and splits into two networks; the main and target network. The main network computes the value function of the state. This function tells us how good it is to be in any given state. The target network computes the advantage function of the state. This function tells us how much better taking a certain action would be compared to others. We then sum these values to get our final Q-value. These functions are then combined into one final Q-function in the last layer. The output is a number from 0-4, each number representing an action in {front, left, right, back}. 
 
-The reason we are using this type of network is because the size of the state space is giant. For each plot that is set as a destination, there are (farm_width^2)-(# plots and water blocks) possible position states. For our 16x16 farm with 4 standard square plots, there are a total of 7,040 possible states that our agent needs to learn and discover. The goal is to expand to larger farming areas, so this type of network also allows for this expansion. This stage of the project is nearly complete. Here is some more technical informatino about the network and it's policies.
+The reason we are using this type of network is because the size of the state space is fairly large. For each plot that is set as a destination, there are (farm_width^2)-(# farmland and water blocks) possible position states. For our 16x16 farm with 4 standard square plots, there are a total of 7,040 possible states that our agent needs to learn and discover. The goal is to expand to larger farming areas, so this type of network also allows for this expansion. This stage of the project is nearly complete. Here is some more technical information about the network and it's policies.
 
 <img src="https://github.com/Eisah-Jones/Farmer-John/blob/master/images/Reference/DDQN_structure.png" alt="" style="max-width:50%;">
 
@@ -39,7 +39,7 @@ if total_steps % (pfn.update_freq) == 0:
     pfn.update_target(targetOps, sess)
 ```
 
-The network also takes advantage of Experience Replay. This allows the agent to store it's experiences, and then randomly draw batches of them to train the network. This should allow the agent to more robustly learn to navigate. In essence, this prevents the network from only learning what it is immediately doing in the environment, and allow it to learn from all of its past experiences. When the buffer reaches its maximum size, the oldest expereinces are removed as the new ones are added.
+The network also takes advantage of Experience Replay. This allows the agent to store it's experiences, and then randomly draw batches of them to train the network. This should allow the agent to more robustly learn to navigate. In essence, this prevents the network from only learning what it is immediately doing in the environment, and allow it to learn from all of its past experiences. When the buffer reaches its maximum size, the oldest experiences are removed as the new ones are added.
 
 Here is our buffer class:
 ```
@@ -61,8 +61,14 @@ class experience_buffer():
 
 This is how our buffer is saved during the training process:
 ```
+# s  = previous state
+# a  = action taken from previous state
+# r  = reward from taking action
+# s1 = resulting state from action
+# d  = whether or not the agent has completed mission
 episodeBuffer.add(np.reshape(np.array([s, a, r, s1, d]), [1, 5]))
 ```
+
 
 As we wrap up the pathfinding portion of the project we are beginning to build and train the neural network for planting and harvesting decisions. This network will receive the content of each plot and agent inventory contents as an array of integers. We are in the last stages of finalizing a model and reward functions.
 
