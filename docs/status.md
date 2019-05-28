@@ -17,7 +17,7 @@ For the first half of this project we are focusing on the pathfinding abilities 
 <img src="https://github.com/Eisah-Jones/Farmer-John/blob/master/images/Reference/DDQN_structure.png" alt="" style="max-width:50%;">
 
 Network Training Equations
-'''
+```
 if e > pfn.endE:
     e -= stepDrop
 
@@ -32,7 +32,7 @@ if total_steps % (pfn.update_freq) == 0:
         feed_dict={mainQN.scalarInput:np.vstack(trainBatch[:,0]), \
                    mainQN.targetQ:targetQ, mainQN.actions:trainBatch[:,1]})
     pfn.update_target(targetOps, sess)
-'''
+```
 
 
 As we wrap up the pathfinding portion of the project we are beginning to build and train the neural network for planting and harvesting decisions. This network will receive the content of each plot and agent inventory contents as an array of integers. We are in the last stages of finalizing a model and reward functions.
