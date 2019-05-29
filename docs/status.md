@@ -6,6 +6,8 @@ title:  Status
 
 # Video
 
+<iframe width="560" height="315" src="https://www.youtube.com/embed/1-_TA086qQM" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 # Project Summary
 
 The goal of our project is to make a farm maintenance AI agent that can help farmer John with all of his farming duties. Our agent will be able to navigate the farm, moving from plot to plot, planting and harvesting as efficiently as possible. The agent will have the choice to plant wheat, carrots, and potatoes all which have different reward values for being planted and harvested. Evaluating the value of the state over a regular time interval should give us a good estimate of how efficiently the agent is working.
