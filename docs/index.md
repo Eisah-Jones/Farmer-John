@@ -9,9 +9,17 @@ Farmer John is getting too old and achy to be working on his farm all day everyd
 
 Stay checked-in with our progress:
 
-You can find all the source code [here](https://github.com/Eisah-Jones/Farmer-John/tree/development)!
+    You can find all the source code [here](https://github.com/Eisah-Jones/Farmer-John/tree/development)!
 
-Reports:
+    Reports:
+        - [Proposal](proposal.md)
+        - [Status Report](status.md)
 
-- [Proposal](proposal.md)
-- [Status Report](status.md)
+
+Here are some of our favorite Minecraft videos!
+    - [Minecraft The Movie 1](https://www.youtube.com/watch?v=dY48r9K-j_4)
+    - [Rooster Teeth Animated Adventures - The One in the Hole](https://www.youtube.com/watch?v=o7ABSsu-ACM)
+    - [MINECRAFT FAIL, A Minecraft Parody](https://www.youtube.com/watch?v=zGJEBiI85hM)
+    - [An Egg's Guide to Minecraft - PART 1 - What's Minecraft?](https://www.youtube.com/watch?v=anoO3K5vOEg)
+    - [Let's Play Minecraft with Geoff, Jack, Michael, Gavin and Ray](https://www.youtube.com/watch?v=FrLgREKD4kk)
+    - [REALISTIC MINECRAFT IN REAL LIFE!](https://www.youtube.com/watch?v=5C7xceB2-UE)
