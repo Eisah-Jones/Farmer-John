@@ -12,8 +12,12 @@ Stay checked-in with our progress:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;You can find all the source code [here](https://github.com/Eisah-Jones/Farmer-John/tree/development)!
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Reports:
+
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- [Proposal](proposal.md)
+
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- [Status Report](status.md)
+
+
 
 
 Here are some of our favorite Minecraft videos!
