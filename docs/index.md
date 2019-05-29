@@ -17,9 +17,16 @@ Stay checked-in with our progress:
 
 
 Here are some of our favorite Minecraft videos!
+
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- [Minecraft The Movie 1](https://www.youtube.com/watch?v=dY48r9K-j_4)
+
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- [Rooster Teeth Animated Adventures - The One in the Hole](https://www.youtube.com/watch?v=o7ABSsu-ACM)
+
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- [MINECRAFT FAIL, A Minecraft Parody](https://www.youtube.com/watch?v=zGJEBiI85hM)
+
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- [An Egg's Guide to Minecraft - PART 1 - What's Minecraft?](https://www.youtube.com/watch?v=anoO3K5vOEg)
+
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- [Let's Play Minecraft with Geoff, Jack, Michael, Gavin and Ray](https://www.youtube.com/watch?v=FrLgREKD4kk)
+
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- [REALISTIC MINECRAFT IN REAL LIFE!](https://www.youtube.com/watch?v=5C7xceB2-UE)
+
