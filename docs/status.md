@@ -71,6 +71,38 @@ This is how our buffer is saved during the training process:
 episodeBuffer.add(np.reshape(np.array([s, a, r, s1, d]), [1, 5]))
 ```
 
+Lastly, here is our reward function for our agent.
+```
+def get_reward(start, end, moved, optimal_path, new_dist):
+    global already_travelled
+    path, dim = optimal_path
+    optimal_move = path[1]
+    optimal_x = get_row(optimal_move, dim)
+    optimal_y = get_col(optimal_move, dim)
+
+    result = 0
+    if len(path) == new_dist: # If agent did not move, penalize 10
+        result -= 10
+    elif len(path) < new_dist: # If agent is further away, penalize 20
+        result -= 20
+    else: # If agent is closer, reward 20
+        result += 20
+
+    dist = new_dist-1
+    if dist < 2: # If within interaction distance
+        return 100
+    result -= dist * 0.2
+    if moved == -1: # If made an invalid move
+        result -= 10
+    else: # If made a valid move
+        result -= 1
+    if start in already_travelled: # If has already been to block
+        result -= 5
+    else:
+        already_travelled.append(start) 
+    return result
+```
+
 
 As we wrap up the pathfinding portion of the project we are beginning to build and train the neural network for planting and harvesting decisions. This network will receive the content of each plot and agent inventory contents as an array of integers. We are in the last stages of finalizing a model and reward functions.
 
