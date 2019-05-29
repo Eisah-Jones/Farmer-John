@@ -9,17 +9,17 @@ Farmer John is getting too old and achy to be working on his farm all day everyd
 
 Stay checked-in with our progress:
 
-You can find all the source code [here](https://github.com/Eisah-Jones/Farmer-John/tree/development)!
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;You can find all the source code [here](https://github.com/Eisah-Jones/Farmer-John/tree/development)!
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Reports:
-- [Proposal](proposal.md)
-- [Status Report](status.md)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- [Proposal](proposal.md)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- [Status Report](status.md)
 
 
 Here are some of our favorite Minecraft videos!
-    - [Minecraft The Movie 1](https://www.youtube.com/watch?v=dY48r9K-j_4)
-    - [Rooster Teeth Animated Adventures - The One in the Hole](https://www.youtube.com/watch?v=o7ABSsu-ACM)
-    - [MINECRAFT FAIL, A Minecraft Parody](https://www.youtube.com/watch?v=zGJEBiI85hM)
-    - [An Egg's Guide to Minecraft - PART 1 - What's Minecraft?](https://www.youtube.com/watch?v=anoO3K5vOEg)
-    - [Let's Play Minecraft with Geoff, Jack, Michael, Gavin and Ray](https://www.youtube.com/watch?v=FrLgREKD4kk)
-    - [REALISTIC MINECRAFT IN REAL LIFE!](https://www.youtube.com/watch?v=5C7xceB2-UE)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- [Minecraft The Movie 1](https://www.youtube.com/watch?v=dY48r9K-j_4)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- [Rooster Teeth Animated Adventures - The One in the Hole](https://www.youtube.com/watch?v=o7ABSsu-ACM)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- [MINECRAFT FAIL, A Minecraft Parody](https://www.youtube.com/watch?v=zGJEBiI85hM)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- [An Egg's Guide to Minecraft - PART 1 - What's Minecraft?](https://www.youtube.com/watch?v=anoO3K5vOEg)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- [Let's Play Minecraft with Geoff, Jack, Michael, Gavin and Ray](https://www.youtube.com/watch?v=FrLgREKD4kk)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- [REALISTIC MINECRAFT IN REAL LIFE!](https://www.youtube.com/watch?v=5C7xceB2-UE)
