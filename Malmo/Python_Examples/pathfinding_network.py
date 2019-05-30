@@ -55,21 +55,17 @@ class PathfindingNetwork:
         update_target(targetOps, sess)
 
 
-    def test(self):
-        pass
-
-
-    def predict(self, sess, s):
+    def test(self, sess, s):
         return sess.run(self.mainQN.predict, feed_dict={self.mainQN.scalarInput:[s]})[0]
 
 
     def get_action(self, s, total_steps):
         if self.exploration == 'e-greedy':
             if random.random() < self.e or (total_steps < self.pre_train_steps and not self.load_model):
-                a = np.random.randint(0, 4)
+                a = np.random.randint(0, 3)
             else:
                 a = sess.run(self.mainQN.predict, feed_dict={self.mainQN.scalarInput: [s]})[0]
-            return (True, a)
+            return a
 
 
     def get_reward(self, start, end, moved, optimal_path, new_dist):
