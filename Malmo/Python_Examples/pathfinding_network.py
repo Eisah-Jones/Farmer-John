@@ -11,7 +11,7 @@ import data_writer as dw
 
 
 class PathfindingNetwork:
-    def __init__(self, load_model = False, model_path = 'default', exploration = 'e-greedy'):
+    def __init__(self, load_model = False, model_path = 'default_checkpoint', exploration = 'e-greedy'):
         self.batch_size = 64
         self.update_freq = 1
         self.y = 0.99
@@ -36,7 +36,7 @@ class PathfindingNetwork:
         self.networkBuffer = experience_buffer()
         self.e = self.startE
         self.stepDrop = (self.startE - self.endE) / self.annealing_steps
-        self.log = dw.DataWriter('pathfinding')
+        self.log = dw.DataWriter('pathfinding_train_data')
         self.log.create_csv_record()
         
         self.check_path()

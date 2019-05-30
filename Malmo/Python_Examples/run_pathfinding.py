@@ -1,3 +1,4 @@
+import os
 import time
 import random
 import MalmoPython
@@ -114,9 +115,9 @@ def train_agent():
                     break
             network.add_episode_experience(episodeBuffer.buffer)
             if (i % 100 == 0):
-                network.saver.save(sess, network.model_path+"model-epi-"+str(i)+".ckpt")
+                network.saver.save(sess, os.path.join(network.model_path, "model-epi-"+str(i)+".ckpt"))
             print('Mission Ended\n')
-        network.saver.save(sess, network.model_path+"model-final-"+str(i)+".ckpt")
+        network.saver.save(sess, os.path.join(network.model_path, "model-final-.ckpt"))
 
 
 def test_agent():

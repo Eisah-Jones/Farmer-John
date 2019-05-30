@@ -2,7 +2,7 @@ import os
 
 class DataWriter:
     def __init__(self, data_type, data_path = 'default'):
-        if not data_type in ['pathfinding']:
+        if not data_type in ['pathfinding_train_data']:
             raise Exception('Invalid data type for DataWriter: {}'.format(data_type))
         self.data_type = data_type
         self.data_path = 'data/{}/{}'.format(self.data_type, data_path)
@@ -24,7 +24,7 @@ class DataWriter:
         ''' Creates pathfinding record csv file
         '''
         contents = ''
-        if self.data_type == 'pathfinding':
+        if self.data_type == 'pathfinding_train_data':
             dir_contents = [d for d in os.listdir(self.data_path)]
             if len(dir_contents) == 0:
                 self.file_path = self.data_path + '/pathfinding_0.csv' 
