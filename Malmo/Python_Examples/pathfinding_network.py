@@ -1,75 +1,120 @@
 import os
 import math
+import time
 import random
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
 import tensorflow.keras.layers as kl
 import numpy as np
-
-import time
-
-## Training parameters
-batch_size = 64
-update_freq = 1
-y = 0.99
-startE = 1
-endE = 0.1
-annealing_steps = 10000.0
-num_episodes = 30000
-pre_train_steps = 10000
-load_model = True
-path = "testing/"
-h_size = 256
-tau = 0.001
-
-already_travelled = []
+import dueling_network as dn
+import data_writer as dw
 
 
-class QPathFinding:
+class PathfindingNetwork:
+    def __init__(self, load_model = False, model_path = 'default', exploration = 'e-greedy'):
+        self.batch_size = 64
+        self.update_freq = 1
+        self.y = 0.99
+        self.startE = 1
+        self.endE = 0.1
+        self.annealing_steps = 1000000.0
+        self.num_episodes = 50000
+        self.pre_train_steps = 100000
+        self.load_model = load_model
+        self.model_path = 'data/pathfinding_network/' + model_path
+        self.exploration = exploration
+        self.tau = 0.001
+        self.h_size = 1024
 
-    def __init__(self, h_size):
-        self.scalarInput = tf.placeholder(shape=[None,256], dtype=tf.float32)
-        self.imageIn = tf.reshape(self.scalarInput, shape=[-1, 16, 16, 1])
+        self.mainQN = dn.DuelingNetwork(self.h_size, 4)
+        self.targetQN = dn.DuelingNetwork(self.h_size, 4)
 
-        self.conv1 = slim.conv2d(inputs = self.imageIn, num_outputs = 32, \
-                                 kernel_size = [2, 2], stride = [1, 1], \
-                                 padding = 'VALID', biases_initializer=None)
+        self.init = tf.global_variables_initializer()
+        self.saver = tf.train.Saver()
+        self.trainables = tf.trainable_variables()
+        self.targetOps = updateTargetGraph(self.trainables, self.tau)
+        self.networkBuffer = experience_buffer()
+        self.e = self.startE
+        self.stepDrop = (self.startE - self.endE) / self.annealing_steps
+        self.log = dw.DataWriter('pathfinding')
+        self.log.create_csv_record()
         
-        self.conv2 = slim.conv2d(inputs = self.conv1, num_outputs = 64, \
-                                 kernel_size = [3, 3], stride = [2, 2], \
-                                 padding = 'VALID', biases_initializer=None)
+        self.check_path()
 
-        self.conv3 = slim.conv2d(inputs = self.conv2, num_outputs = 128, \
-                                 kernel_size = [2, 2], stride = [1, 1], \
-                                 padding = 'VALID', biases_initializer=None)
 
-        self.conv4 = slim.conv2d(inputs = self.conv3, num_outputs = h_size/4, \
-                                 kernel_size = [3, 3], stride = [3, 3], \
-                                 padding = 'VALID')
+    def train(self, dest):
+        trainBatch = self.networkBuffer.sample(self.batch_size, dest)
+        Q1 = sess.run(self.mainQN.predict, feed_dict={self.mainQN.scalarInput:np.vstack(trainBatch[:,3])})
+        Q2 = sess.run(self.targetQN.Qout, feed_dict={self.targetQN.scalarInput:np.vstack(trainBatch[:,3])})
+        end_multiplier = -(trainBatch[:, 4] - 1)
+        doubleQ = Q2[range(self.batch_size), Q1]
+        targetQ = trainBatch[:,2] + (self.y*doubleQ*end_multiplier)
+        _ = sess.run(self.mainQN.updateModel, \
+            feed_dict={self.mainQN.scalarInput:np.vstack(trainBatch[:,0]), \
+                       self.mainQN.targetQ:targetQ, self.mainQN.actions:trainBatch[:,1]})
+        update_target(targetOps, sess)
 
-        self.streamAC, self.streamVC = tf.split(self.conv4, 2, 1)
-        self.streamA = slim.flatten(self.streamAC)
-        self.streamV = slim.flatten(self.streamVC)
-        xavier_init = tf.contrib.layers.xavier_initializer()
-        self.AW = tf.Variable(xavier_init([h_size//2, 4])) # 4 is number of environment actions
-        self.VW = tf.Variable(xavier_init([h_size//2, 1]))
-        self.Advantage = tf.matmul(self.streamA, self.AW)
-        self.Value = tf.matmul(self.streamV, self.VW)
 
-        self.Qout = self.Value + tf.subtract(self.Advantage, tf.reduce_mean(self.Advantage, axis=1, keep_dims=True))
-        self.predict = tf.argmax(self.Qout, 1)
+    def test(self):
+        pass
 
-        self.targetQ = tf.placeholder(shape=[None], dtype=tf.float32)
-        self.actions = tf.placeholder(shape=[None], dtype=tf.int32)
-        self.actions_onehot = tf.one_hot(self.actions, 4, dtype=tf.float32)
 
-        self.Q = tf.reduce_sum(tf.multiply(self.Qout, self.actions_onehot), axis=1)
+    def predict(self, sess, s):
+        return sess.run(self.mainQN.predict, feed_dict={self.mainQN.scalarInput:[s]})[0]
 
-        self.td_error = tf.square(self.targetQ - self.Q)
-        self.loss = tf.reduce_mean(self.td_error)
-        self.trainer = tf.train.AdamOptimizer(learning_rate=0.0001)
-        self.updateModel = self.trainer.minimize(self.loss)
 
+    def get_action(self, s, total_steps):
+        if self.exploration == 'e-greedy':
+            if random.random() < self.e or (total_steps < self.pre_train_steps and not self.load_model):
+                a = np.random.randint(0, 4)
+            else:
+                a = sess.run(self.mainQN.predict, feed_dict={self.mainQN.scalarInput: [s]})[0]
+            return (True, a)
+
+
+    def get_reward(self, start, end, moved, optimal_path, new_dist):
+        reward = 0
+        path, dim = optimal_path
+        current_dist = new_dist - 1
+
+        if current_dist <= 1:
+            return 100
+
+        reward -= current_dist * 0.35
+        
+        if len(path) <= new_dist:
+            reward -= 20
+        else:
+            reward += 20
+
+        if moved == -1:
+            reward -= 10
+        else:
+            reward -+ 1
+
+        return reward
+
+
+    def decrease_epsilon(self):
+        if self.e > self.endE:
+            self.e -= self.stepDrop
+
+
+    def add_episode_experience(self, experience):
+        self.networkBuffer.add(experience)
+
+
+    def save_session(self, sess, path):
+        self.saver.save(sess, path)
+
+
+    def check_path(self):
+        if not os.path.exists('data/pathfinding_network'):
+            os.mkdir('data/pathfinding_network')
+
+        if not os.path.exists(self.model_path):
+            os.mkdir(self.model_path)
+            
 
 
 class experience_buffer():
@@ -82,8 +127,16 @@ class experience_buffer():
             self.buffer[0:(len(experience)+len(self.buffer))-self.buffer_size] = []
         self.buffer.extend(experience)
 
-    def sample(self, size):
-        return np.reshape(np.array(random.sample(self.buffer, size)), [size, 5])
+    def sample(self, size, dest):
+        dest_buffer = []
+        for experience in self.buffer:
+            if experience[-1] == dest:
+                dest_buffer.append(experience)
+
+        if len(dest_buffer) < size:
+            dest_buffer.extend(list(random.sample(self.buffer, size-len(dest_buffer)+1)))
+            
+        return np.reshape(np.array(random.sample(dest_buffer, size)), [size, 6])
 
 
 def process_state(states):
@@ -102,49 +155,3 @@ def updateTargetGraph(tfVars, tau):
 def update_target(op_holder, sess):
     for op in op_holder:
         sess.run(op)
-
-
-def get_row(idx, dim):
-    return int(idx / dim)
-
-
-def get_col(idx, dim):
-    return idx % dim
-
-def get_reward(start, end, moved, optimal_path, new_dist):
-    global already_travelled
-    path, dim = optimal_path
-    optimal_move = path[1]
-    optimal_x = get_row(optimal_move, dim)
-    optimal_y = get_col(optimal_move, dim)
-
-    result = 0
-    if len(path) == new_dist:
-        result -= 10
-    elif len(path) < new_dist:
-        result -= 20
-    else:
-        result += 20
-
-
-    dist = new_dist-1
-    if dist < 2: # If within interaction distance
-        return 100
-    result -= dist * 0.2
-    if moved == -1: # If made an invalid move
-        result -= 10
-    else:
-        result -= 1
-##    if start in already_travelled: # If has already been to block
-##        result -= 5
-##    else:
-##        already_travelled.append(start) 
-    return result
-
-
-def reset_already_travelled():
-    global already_travelled
-    already_travelled = []
-
-
-

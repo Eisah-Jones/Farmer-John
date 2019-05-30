@@ -89,7 +89,7 @@ def animate_dest_movement(df, dest, fname, reset_ep = False):
 
     width = 675
     height = 566
-    FPS = 60
+    FPS = 24
     seconds = 10
     fourcc = VideoWriter_fourcc('m', 'p', '4', 'v')
     video = VideoWriter('data/heatmaps/anim_dest/{}.mov'.format(fname), fourcc, float(FPS), (width, height))
@@ -99,6 +99,7 @@ def animate_dest_movement(df, dest, fname, reset_ep = False):
     df_pos = dict()
     edf = pd.DataFrame(columns=['x', 'z', 'v'])
     lastE = -1
+    _time = time.time()
     for x, z, e in zip(posX_steps, posZ_steps, epNums):
         if frameNum % 1000 == 0:
             print(frameNum, time.time() - _time)
@@ -280,7 +281,7 @@ def graph_success_by_dest(df):
             performance[dest] = y[-1]
             ## Check if rolling avergae produces better results
             rollingFrame = pd.DataFrame(np.array(y), columns=['y'])
-            y = rollingFrame.rolling(100).mean()
+            y = rollingFrame.rolling(10).mean()
 
             plt.title("Destination {} Navigation Performance".format(dest))
             plt.xlabel("Episode Number")
@@ -291,8 +292,8 @@ def graph_success_by_dest(df):
             plt.savefig("data/nav_success/{}_{}.png".format(int(dest[0]), int(dest[1])))
             plt.close()
 
-            fig = plt.figure()
-            ax = plt.axes(projection='3d')
+            #fig = plt.figure()
+            #ax = plt.axes(projection='3d')
             
             
     return performance
@@ -336,10 +337,10 @@ def print_dict_sorted(d):
         print('{}: {}'.format(k, v))
 
 if __name__ == "__main__":
-    data = pd.read_csv("data/movement2.csv")
+    data = pd.read_csv("data/movement.csv")
     t = time.time()
     #graph_pathfinding_reward(data)
-    #graph_success_by_dest(data)
+    graph_success_by_dest(data)
     #print(performance)
     #plt.bar(performance.values(), performance.keys())
     #plt.savefig('bar.png')
@@ -351,6 +352,8 @@ if __name__ == "__main__":
 ##               (j in [5, 11] and i in [4, 6, 10, 12]) :
 ##                dest = (i, j)
 ##                plot_dest_movement(data, dest)
-    dest = (6, 5)
-    animate_dest_movement(data[:len(data)//8], dest, "dest_{}_{}".format(dest[0], dest[1]))
+    #dest = (6, 5)
+    #start = len(data) - int(1.35*(len(data)//16))
+    #end = len(data) - len(data)//16
+    #animate_dest_movement(data[start:end], dest, "dest_{}_{}".format(dest[0], dest[1]))
     #print_dict_sorted(dest)
