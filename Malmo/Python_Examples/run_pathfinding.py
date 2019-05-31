@@ -68,18 +68,17 @@ def run_agent(isTraining):
             network.log.record_csv_data(i, episode_steps, FarmerBot.position, FarmerBot.destination, a, 0, 0, quickest_path)
             print("Mission {} \n\t{} --> {}\n\tOptimal Path: {}".format(i, FarmerBot.position, FarmerBot.destination, quickest_path-1))
             while world_state.is_mission_running:
-                #time.sleep(0.01) # FOR DEV TESTING
                 world_state = FarmerBot.agent.getWorldState()
                 for error in world_state.errors:
                     print('Error:', error.text)
                 if isTraining:
+                    #time.sleep(0.01) # FOR DEV TESTING
                     optimal_path = get_path_dikjstra(FarmerBot.position, FarmerBot.destination, state)
-                    action = network.get_action(state, total_steps)
+                    action = network.get_action(sess, state, total_steps)
                     move_loc = FarmerBot.get_action_pos(action)
                     if farm.is_valid_move(move_loc):
                         did_move = 1
                         FarmerBot.teleport_agent(move_loc)
-                        start = move_loc
                         new_state = pfn.process_state(farm.get_pathfinding_input(FarmerBot.position, FarmerBot.destination))
                         new_dist = len(get_path_dikjstra(move_loc, FarmerBot.destination, new_state)[0])
                     else:
@@ -92,10 +91,10 @@ def run_agent(isTraining):
                     episodeBuffer.add(np.reshape(np.array([state, action, reward, new_state, complete, FarmerBot.destination]), [1, 6]))
                     if total_steps > network.pre_train_steps:
                         if network.e > network.endE:
-                            network.e -= stepDrop
+                            network.e -= network.stepDrop
 
                         if total_steps % network.update_freq == 0:
-                            network.train(destination)
+                            network.train(sess, FarmerBot.destination)
                     state = new_state
                     episode_steps += 1
                     total_steps += 1
@@ -110,15 +109,16 @@ def run_agent(isTraining):
                             print("\tSuccessful Navigation in {} steps!".format(episode_steps))
                         break
                 else:
+                    #time.sleep(0.01) # FOR DEV TESTING
                     action = network.test(sess, state)
                     move_loc = FarmerBot.get_action_pos(action)
                     if farm.is_valid_move(move_loc):
                         FarmerBot.teleport_agent(move_loc)
-                        start = move_loc
-                        new_dist = len(get_path_dikjstra(move_loc, destination, new_state)[0])
+                        state = pfn.process_state(farm.get_pathfinding_input(FarmerBot.position, FarmerBot.destination))
+                        new_dist = len(get_path_dikjstra(move_loc, FarmerBot.destination, state)[0])
 
-                    if new_dist < 2:
-                        FarmerBot.destination = random.choice(farm.farmable)
+                        if new_dist < 2:
+                            FarmerBot.destination = random.choice(farm.farmable)
                     
             network.add_episode_experience(episodeBuffer.buffer)
             if (i % 100 == 0):
@@ -127,7 +127,7 @@ def run_agent(isTraining):
         network.saver.save(sess, os.path.join(network.model_path, "model-final-.ckpt"))
 
     
-# Main loop for running the final agent
+# Main loop for running the pathfinding agent
 if __name__ == '__main__':
     run_agent(isTraining = True) # Training agent
     #run_agent(isTraining = False) # Testing agent

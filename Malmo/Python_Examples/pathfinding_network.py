@@ -42,7 +42,7 @@ class PathfindingNetwork:
         self.check_path()
 
 
-    def train(self, dest):
+    def train(self, sess, dest):
         trainBatch = self.networkBuffer.sample(self.batch_size, dest)
         Q1 = sess.run(self.mainQN.predict, feed_dict={self.mainQN.scalarInput:np.vstack(trainBatch[:,3])})
         Q2 = sess.run(self.targetQN.Qout, feed_dict={self.targetQN.scalarInput:np.vstack(trainBatch[:,3])})
@@ -52,17 +52,17 @@ class PathfindingNetwork:
         _ = sess.run(self.mainQN.updateModel, \
             feed_dict={self.mainQN.scalarInput:np.vstack(trainBatch[:,0]), \
                        self.mainQN.targetQ:targetQ, self.mainQN.actions:trainBatch[:,1]})
-        update_target(targetOps, sess)
+        update_target(self.targetOps, sess)
 
 
     def test(self, sess, s):
         return sess.run(self.mainQN.predict, feed_dict={self.mainQN.scalarInput:[s]})[0]
 
 
-    def get_action(self, s, total_steps):
+    def get_action(self, sess, s, total_steps):
         if self.exploration == 'e-greedy':
             if random.random() < self.e or (total_steps < self.pre_train_steps and not self.load_model):
-                a = np.random.randint(0, 3)
+                a = random.randint(0, 3)
             else:
                 a = sess.run(self.mainQN.predict, feed_dict={self.mainQN.scalarInput: [s]})[0]
             return a
@@ -124,15 +124,16 @@ class experience_buffer():
         self.buffer.extend(experience)
 
     def sample(self, size, dest):
-        dest_buffer = []
-        for experience in self.buffer:
-            if experience[-1] == dest:
-                dest_buffer.append(experience)
-
-        if len(dest_buffer) < size:
-            dest_buffer.extend(list(random.sample(self.buffer, size-len(dest_buffer)+1)))
+        # RE-ADD IF AGENT DID WELL WITH
+##        dest_buffer = []
+##        for experience in self.buffer:
+##            if experience[-1] == dest:
+##                dest_buffer.append(experience)
+##
+##        if len(dest_buffer) < size:
+##            dest_buffer.extend(list(random.sample(self.buffer, size-len(dest_buffer)+1)))
             
-        return np.reshape(np.array(random.sample(dest_buffer, size)), [size, 6])
+        return np.reshape(np.array(random.sample(self.buffer, size)), [size, 6])
 
 
 def process_state(states):

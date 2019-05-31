@@ -7,42 +7,54 @@ shulker_dict = {'farmland': 'brown_shulker_box',
                    'stone': 'white_shulker_box',
                    'grass': 'white_shulker_box'}
 
-pathfinding_value = {"white_shulker_box": 1,
-                     "brown_shulker_box": 2,
-                      "blue_shulker_box": 2,
-                                  "prev": 5,
-                                 "start": 10,
-                                  "dest": 15}
+pathfinding_value = {"white_shulker_box": 1.0,
+                     "brown_shulker_box": 2.0,
+                      "blue_shulker_box": 2.0,
+                                  "prev": 5.0,
+                                 "start": 10.0,
+                                  "dest": 15.0}
+
+
+farming_value = {          'empty': 0.0,
+                 'wheat_not_ready': 1.0,
+                     'wheat_ready': 5.0,
+                        'position': 10.0}
 
 
 class Farm:
     def __init__(self, size = 16):
         self.size = 16
-        self.shulker, self.farmland = self.initialize_farm()
+        self.shulker, self.farmland, self.crops = self.initialize_farm()
         self.walkable, self.farmable = self.analyze_farm()
 
 
     def initialize_farm(self):
+        crop_order = []
+        crops = dict()
         bot = []
         top = []
         for i in range(self.size):
+            tempCrop = []
             tempBot = []
             tempTop = []
             for j in range(self.size):
                 if (i in [3, 5, 10, 12] and j in [3, 5, 10, 12]) or \
                    (i in [4, 11] and j in [3, 5, 10, 12]) or \
                    (j in [4, 11] and i in [3, 5, 10, 12]) :
-                    tempTop.append("farmland")
-                    tempBot.append(shulker_dict["farmland"])
+                    crop_order.append((i, j))
+                    crops[(i, j)] = 'empty'
+                    tempTop.append('farmland')
+                    tempBot.append(shulker_dict['farmland'])
                 elif i in [4, 11] and j in [4, 11]:
-                    tempTop.append("water")
-                    tempBot.append(shulker_dict["water"])
+                    tempTop.append('water')
+                    tempBot.append(shulker_dict['water'])
                 else:
-                    tempTop.append("grass")
-                    tempBot.append(shulker_dict["grass"])
+                    tempTop.append('grass')
+                    tempBot.append(shulker_dict['grass'])
             bot.append(tempBot)
             top.append(tempTop)
-        return (bot, top)
+        crops['order'] = crop_order
+        return (bot, top, crops)
 
 
     def analyze_farm(self):
@@ -74,6 +86,13 @@ class Farm:
             result.append(temp)
         result[b[0]][b[1]] = pathfinding_value["dest"]
         result[a[0]][a[1]] = pathfinding_value["start"]
+        return result
+
+
+    def get_farming_input(self):
+        result = []
+        for crop in self.crops:
+            result.append(farming_value[crop])
         return result
 
 

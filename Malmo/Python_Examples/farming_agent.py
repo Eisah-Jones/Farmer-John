@@ -1,6 +1,7 @@
 import sys
 import MalmoPython
 import pathfinding_network as pfn
+import farming_network as fn
 from collections.abc import Iterable
 from algorithms.dikjstra import get_path_dikjstra
 
@@ -18,7 +19,7 @@ class FarmingAgent:
         self.destination = destination
         self.head_tilt = head_tilt
         self.pathfinding_network  = pfn.PathfindingNetwork()
-        self.optimization_network = None
+        self.farming_network = fn.FarmingNetwork()
 
         self._tasks = []
     
