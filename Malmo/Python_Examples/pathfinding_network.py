@@ -12,22 +12,22 @@ import data_writer as dw
 
 class PathfindingNetwork:
     def __init__(self, load_model = False, model_path = 'default_checkpoint', exploration = 'e-greedy'):
-        self.batch_size = 64
-        self.update_freq = 1
+        self.batch_size = 32
+        self.update_freq = 4
         self.y = 0.99
         self.startE = 1
         self.endE = 0.1
         self.annealing_steps = 1000000.0
-        self.num_episodes = 50000
-        self.pre_train_steps = 100000
+        self.num_episodes = 100000
+        self.pre_train_steps = 1000000
         self.load_model = load_model
         self.model_path = 'data/pathfinding_network/' + model_path
         self.exploration = exploration
         self.tau = 0.001
-        self.h_size = 1024
+        self.h_size = 512
 
-        self.mainQN = dn.DuelingNetwork(self.h_size, 4)
-        self.targetQN = dn.DuelingNetwork(self.h_size, 4)
+        self.mainQN = dn.DuelingNetwork(self.h_size//4, 4)
+        self.targetQN = dn.DuelingNetwork(self.h_size//4, 4)
 
         self.init = tf.global_variables_initializer()
         self.saver = tf.train.Saver()
@@ -63,9 +63,10 @@ class PathfindingNetwork:
         if self.exploration == 'e-greedy':
             if random.random() < self.e or (total_steps < self.pre_train_steps and not self.load_model):
                 a = random.randint(0, 3)
+                return (a, 1)
             else:
                 a = sess.run(self.mainQN.predict, feed_dict={self.mainQN.scalarInput: [s]})[0]
-            return a
+                return (a, 0)
 
 
     def get_reward(self, start, end, moved, optimal_path, new_dist):
@@ -86,7 +87,7 @@ class PathfindingNetwork:
         if moved == -1:
             reward -= 10
         else:
-            reward -+ 1
+            reward -= 1
 
         return reward
 
@@ -114,7 +115,7 @@ class PathfindingNetwork:
 
 
 class experience_buffer():
-    def __init__(self, buffer_size = 100000):
+    def __init__(self, buffer_size = 25000):
         self.buffer = []
         self.buffer_size = buffer_size
 
@@ -127,6 +128,7 @@ class experience_buffer():
         # RE-ADD IF AGENT DID WELL WITH
 ##        dest_buffer = []
 ##        for experience in self.buffer:
+##            print(experience[-1])
 ##            if experience[-1] == dest:
 ##                dest_buffer.append(experience)
 ##

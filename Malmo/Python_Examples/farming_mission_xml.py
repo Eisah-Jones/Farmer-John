@@ -28,7 +28,7 @@ mission_xml = '''<?xml version="1.0" encoding="UTF-8" ?>
               <AgentSection mode="Survival">
                 <Name>FarmerBot</Name>
                 <AgentStart>
-                  <Placement yaw="-90"/>
+                  <Placement yaw="-90" pitch="50"/>
                   <Inventory>
                     <InventoryObject slot="0" type="wheat_seeds" quantity="64"/>
                     <InventoryObject slot="1" type="carrot" quantity="64"/>

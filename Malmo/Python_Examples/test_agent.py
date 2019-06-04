@@ -1,7 +1,7 @@
 import random
 import MalmoPython
 import farming_agent as fa
-import farm_generator_new as fg
+import farm as fg
 import farming_mission_xml as fmx
 from algorithms.dikjstra import get_path_dikjstra
 

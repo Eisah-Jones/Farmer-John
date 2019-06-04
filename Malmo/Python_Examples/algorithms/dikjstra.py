@@ -47,16 +47,16 @@ def get_path_dikjstra(start, end, layout):
         if row < get_row(n - 1):
             nbs.append(to_index(row + 1, col))
 
-        nbs = [idx for idx in nbs if not layout[idx] == 2]
+        nbs = [idx for idx in nbs if not layout[idx] == 2.0]
 
         return nbs
 
-    dist = {idx: float("inf") for idx in range(n) if not layout[idx] == 2}
-    prev = {idx: None for idx in range(n) if not layout[idx] == 2}
+    dist = {idx: float("inf") for idx in range(n) if not layout[idx] == 2.0}
+    prev = {idx: None for idx in range(n) if not layout[idx] == 2.0}
 
     dist[start] = 0
 
-    Q = [idx for idx in range(n) if not layout[idx] == 2]
+    Q = [idx for idx in range(n) if not layout[idx] == 2.0]
 
     while len(Q) > 0:
         u = min(Q, key=lambda idx: dist[idx])

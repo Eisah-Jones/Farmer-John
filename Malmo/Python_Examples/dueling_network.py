@@ -13,19 +13,19 @@ class DuelingNetwork:
         self.imageIn = tf.reshape(self.scalarInput, shape=[-1, 16, 16, 1])
 
         self.conv1 = slim.conv2d(inputs = self.imageIn, num_outputs = 64, \
-                                 kernel_size = [2, 2], stride = [1, 1], \
+                                 kernel_size = [3, 3], stride = [3, 3], \
                                  padding = 'VALID', biases_initializer=None)
         
         self.conv2 = slim.conv2d(inputs = self.conv1, num_outputs = 128, \
-                                 kernel_size = [3, 3], stride = [2, 2], \
-                                 padding = 'VALID', biases_initializer=None)
-
-        self.conv3 = slim.conv2d(inputs = self.conv2, num_outputs = 128, \
                                  kernel_size = [2, 2], stride = [1, 1], \
                                  padding = 'VALID', biases_initializer=None)
 
+        self.conv3 = slim.conv2d(inputs = self.conv2, num_outputs = 128, \
+                                 kernel_size = [1, 1], stride = [1, 1], \
+                                 padding = 'VALID', biases_initializer=None)
+
         self.conv4 = slim.conv2d(inputs = self.conv3, num_outputs = h_size//4, \
-                                 kernel_size = [3, 3], stride = [3, 3], \
+                                 kernel_size = [2, 2], stride = [2, 2], \
                                  padding = 'VALID')
 
         self.streamAC, self.streamVC = tf.split(self.conv4, 2, 1)

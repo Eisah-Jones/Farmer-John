@@ -26,6 +26,7 @@ class Farm:
         self.size = 16
         self.shulker, self.farmland, self.crops = self.initialize_farm()
         self.walkable, self.farmable = self.analyze_farm()
+        self.growable = dict()
 
 
     def initialize_farm(self):
@@ -77,23 +78,53 @@ class Farm:
 
 
 
-    def get_pathfinding_input(self, a, b):
+    def get_pathfinding_input(self, a, b, prevPos = None):
         result = []
         for r in self.shulker:
             temp = []
             for c in r:
                 temp.append(pathfinding_value[c])
             result.append(temp)
-        result[b[0]][b[1]] = pathfinding_value["dest"]
-        result[a[0]][a[1]] = pathfinding_value["start"]
+        if not prevPos is None:
+            for p in prevPos:
+                result[p[0]][p[1]] = pathfinding_value['prev']
+        result[b[0]][b[1]] = pathfinding_value['dest']
+        result[a[0]][a[1]] = pathfinding_value['start']
         return result
 
 
     def get_farming_input(self):
         result = []
-        for crop in self.crops:
-            result.append(farming_value[crop])
+        for crop in self.crops['order']:
+            result.append(farming_value[self.crops[crop]])
         return result
+
+
+    def plant_crop(self, position):
+        self.crops[position] = 'wheat_not_ready'
+        self.growable[position] = random.randint(5, 40)
+
+
+    def harvest_crop(self, position):
+        self.crops[position] = 'empty'
+
+
+    def grow_crops(self):
+        to_delete = []
+        for crop, cycle in self.growable.items():
+            if cycle == 0:
+                self.crops[crop] = 'wheat_ready'
+                to_delete.append(crop)
+            else:
+                self.growable[crop] -= 1
+
+        for d in to_delete:
+            del self.growable[d]
+
+
+    def reset_crops(self):
+        for k in self.crops.keys():
+            self.crops[k] = 'empty'
 
 
     def is_valid_move(self, pos):

@@ -11,12 +11,6 @@ from PIL import Image
 from scipy.signal import savgol_filter
 
 
-
-def ex_main(df):
-    pass
-    
-
-
 def write_movement_frame(df, v):
     ''' Writes movement frame for video
     '''
@@ -337,7 +331,7 @@ def print_dict_sorted(d):
         print('{}: {}'.format(k, v))
 
 if __name__ == "__main__":
-    data = pd.read_csv("data/movement.csv")
+    data = pd.read_csv("data/pathfinding_train_data/default/pathfinding_10.csv")
     t = time.time()
     #graph_pathfinding_reward(data)
     graph_success_by_dest(data)
