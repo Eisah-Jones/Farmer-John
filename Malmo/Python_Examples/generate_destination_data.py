@@ -5,7 +5,7 @@ from algorithms.dikjstra import get_path_dikjstra
 
 
 def start_csv():
-    f = open('test_data2.csv', 'w')
+    f = open('test_data3.csv', 'w')
     line = ''
     for i in range(32):
         line += '{},'.format(i)
@@ -22,11 +22,10 @@ def add_csv(buffer):
     f.close()
 
 
-# Essentially hardcoded solution
 if __name__ == '__main__':
     farm = fg.Farm()
     num_episodes = 1000
-    num_data_points = 100
+    num_data_points = 1000
     start_csv()
     for i in range(num_episodes):
         start = random.choice(farm.farmable)

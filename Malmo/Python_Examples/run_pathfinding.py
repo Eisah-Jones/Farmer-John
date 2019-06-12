@@ -67,7 +67,7 @@ def run_agent(isTraining, load_model = False):
             new_dist = a = did_move = -1
             episode_steps = random_steps = 0
             quickest_path = len(get_path_dikjstra(FarmerBot.position, FarmerBot.destination, state)[0])-1
-            network.log.record_csv_data(i, episode_steps, FarmerBot.position, FarmerBot.destination, a, 0, 0, quickest_path)
+            network.log.record_csv_data(i, episode_steps, FarmerBot.position[0], FarmerBot.position[1], FarmerBot.destination[0], FarmerBot.destination[1], random.randint(0,3), 0, 0, 0)
             if total_steps > network.pre_train_steps:
                 print("Mission {} \n\t{} --> {}\n\tOptimal Path: {}\n\tNetwork Exploration Rate: {}".format(i, FarmerBot.position, FarmerBot.destination, quickest_path-1, network.e))
             while world_state.is_mission_running:
@@ -75,7 +75,7 @@ def run_agent(isTraining, load_model = False):
                 for error in world_state.errors:
                     print('Error:', error.text)
                 if isTraining:
-                    #time.sleep(0.1) # FOR DEV TESTING
+                    #time.sleep(2) # FOR DEV TESTING
                     if len(previousPositions) < 5:
                         previousPositions.append(FarmerBot.position)
                     else:
@@ -94,7 +94,7 @@ def run_agent(isTraining, load_model = False):
                         did_move = -1
                         new_state = state
                         new_dist = len(get_path_dikjstra(FarmerBot.position, FarmerBot.destination, new_state)[0])
-                    reward = network.get_reward(move_loc, FarmerBot.destination, did_move, optimal_path, new_dist)
+                    reward = network.get_reward(move_loc, FarmerBot.destination, did_move, optimal_path, new_dist, quickest_path)
                     if reward == 100:
                         complete = True
                     episodeBuffer.add(np.reshape(np.array([state, action, reward, new_state, complete, FarmerBot.destination]), [1, 6]))

@@ -28,17 +28,17 @@ mission_xml = '''<?xml version="1.0" encoding="UTF-8" ?>
               <AgentSection mode="Survival">
                 <Name>FarmerBot</Name>
                 <AgentStart>
-                  <Placement yaw="-90" pitch="50"/>
+                  <Placement yaw="-90" pitch="90"/>
                   <Inventory>
                     <InventoryObject slot="0" type="wheat_seeds" quantity="64"/>
-                    <InventoryObject slot="1" type="carrot" quantity="64"/>
-                    <InventoryObject slot="2" type="potato" quantity="64"/>
                   </Inventory>
                 </AgentStart>
                 <AgentHandlers>
                   <ObservationFromFullStats/>
                   <ContinuousMovementCommands/>
                   <AbsoluteMovementCommands/>
+                  <InventoryCommands/>
+                  <ObservationFromFullInventory/>
                 </AgentHandlers>
               </AgentSection>
             </Mission>'''

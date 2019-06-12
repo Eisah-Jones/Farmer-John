@@ -12,22 +12,22 @@ import data_writer as dw
 
 class PathfindingNetwork:
     def __init__(self, load_model = False, model_path = 'default_checkpoint', exploration = 'e-greedy'):
-        self.batch_size = 32
+        self.batch_size = 64
         self.update_freq = 4
         self.y = 0.99
         self.startE = 1
         self.endE = 0.1
         self.annealing_steps = 1000000.0
-        self.num_episodes = 100000
-        self.pre_train_steps = 1000000
+        self.num_episodes = 300000
+        self.pre_train_steps = 100000
         self.load_model = load_model
-        self.model_path = 'data/pathfinding_network/' + model_path
+        self.model_path = model_path
         self.exploration = exploration
-        self.tau = 0.001
+        self.tau = 0.0001
         self.h_size = 512
 
-        self.mainQN = dn.DuelingNetwork(self.h_size//4, 4)
-        self.targetQN = dn.DuelingNetwork(self.h_size//4, 4)
+        self.mainQN = dn.DuelingNetwork(self.h_size, 4)
+        self.targetQN = dn.DuelingNetwork(self.h_size, 4)
 
         self.init = tf.global_variables_initializer()
         self.saver = tf.train.Saver()
@@ -56,8 +56,12 @@ class PathfindingNetwork:
 
 
     def test(self, sess, s):
-        return sess.run(self.mainQN.predict, feed_dict={self.mainQN.scalarInput:[s]})[0]
-
+        s = np.reshape(s, [256])
+        if random.random() < 0.1:
+            a = random.randint(0,3)
+        else:
+            a = sess.run(self.mainQN.predict, feed_dict={self.mainQN.scalarInput: [s]})[0]
+        return a
 
     def get_action(self, sess, s, total_steps):
         if self.exploration == 'e-greedy':
@@ -69,7 +73,7 @@ class PathfindingNetwork:
                 return (a, 0)
 
 
-    def get_reward(self, start, end, moved, optimal_path, new_dist):
+    def get_reward(self, start, end, moved, optimal_path, new_dist, quickest_path):
         reward = 0
         path, dim = optimal_path
         current_dist = new_dist - 1
@@ -77,7 +81,7 @@ class PathfindingNetwork:
         if current_dist <= 1:
             return 100
 
-        reward -= current_dist * 0.35
+        reward -= current_dist * 0.5
         
         if len(path) <= new_dist:
             reward -= 20
@@ -115,7 +119,7 @@ class PathfindingNetwork:
 
 
 class experience_buffer():
-    def __init__(self, buffer_size = 25000):
+    def __init__(self, buffer_size=40000):
         self.buffer = []
         self.buffer_size = buffer_size
 
@@ -124,17 +128,7 @@ class experience_buffer():
             self.buffer[0:(len(experience)+len(self.buffer))-self.buffer_size] = []
         self.buffer.extend(experience)
 
-    def sample(self, size, dest):
-        # RE-ADD IF AGENT DID WELL WITH
-##        dest_buffer = []
-##        for experience in self.buffer:
-##            print(experience[-1])
-##            if experience[-1] == dest:
-##                dest_buffer.append(experience)
-##
-##        if len(dest_buffer) < size:
-##            dest_buffer.extend(list(random.sample(self.buffer, size-len(dest_buffer)+1)))
-            
+    def sample(self, size, dest): 
         return np.reshape(np.array(random.sample(self.buffer, size)), [size, 6])
 
 

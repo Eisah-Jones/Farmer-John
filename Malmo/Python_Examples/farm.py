@@ -21,13 +21,17 @@ farming_value = {          'empty': 0.0,
                         'position': 10.0}
 
 
+state_value = {          'empty':-1.0,
+               'wheat_not_ready': 2.0,
+                   'wheat_ready': 5.0}
+
+
 class Farm:
     def __init__(self, size = 16):
         self.size = 16
         self.shulker, self.farmland, self.crops = self.initialize_farm()
         self.walkable, self.farmable = self.analyze_farm()
         self.growable = dict()
-
 
     def initialize_farm(self):
         crop_order = []
@@ -57,7 +61,6 @@ class Farm:
         crops['order'] = crop_order
         return (bot, top, crops)
 
-
     def analyze_farm(self):
         walkable = []
         farmable = []
@@ -69,14 +72,11 @@ class Farm:
                     walkable.append((i, j))
         return (walkable, farmable)
                     
-
     def spawn_farm(self, mission):
         for i in range(self.size):
             for j in range(self.size):
                 mission.drawBlock(i, 0, j, self.shulker[i][j])
                 mission.drawBlock(i, 1, j, self.farmland[i][j])
-
-
 
     def get_pathfinding_input(self, a, b, prevPos = None):
         result = []
@@ -92,22 +92,24 @@ class Farm:
         result[a[0]][a[1]] = pathfinding_value['start']
         return result
 
-
     def get_farming_input(self):
         result = []
         for crop in self.crops['order']:
             result.append(farming_value[self.crops[crop]])
         return result
 
+    def plant_crop_test(self, position):
+        self.crops[position] = 'wheat_not_ready'
+        self.growable[position] = 500
 
     def plant_crop(self, position):
         self.crops[position] = 'wheat_not_ready'
         self.growable[position] = random.randint(5, 40)
 
-
     def harvest_crop(self, position):
         self.crops[position] = 'empty'
-
+        if position in self.growable.keys():
+            del self.growable[position]
 
     def grow_crops(self):
         to_delete = []
@@ -121,11 +123,16 @@ class Farm:
         for d in to_delete:
             del self.growable[d]
 
-
     def reset_crops(self):
         for k in self.crops.keys():
             self.crops[k] = 'empty'
 
+    def get_farm_value(self):
+        result = 0
+        for k, v in self.crops.items():
+            if k == 'order': continue
+            result += state_value[v]
+        return result
 
     def is_valid_move(self, pos):
         x, z = pos
